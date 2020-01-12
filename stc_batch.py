@@ -188,10 +188,18 @@ if __name__ == '__main__':
 
     # read arguments from the command line
     args = parser.parse_args()
+
+    # get dataset name
+    if args.dataset:
+        dataset = args.dataset
+    else:
+        print("provide dataset name!")
+        exit(-1)
+
     if args.tap:
         tap = args.tap
     else:
-        tap = 10  # default is to use 10 taps
+        tap = 8  # default is to use 10 taps
     print("number of tap is {}.".format(tap))
 
     # load data
