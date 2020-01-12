@@ -184,6 +184,7 @@ def run_stc(stim, spike_train, info, tap=10, folder_name="stc", cov_algorithm="c
 if __name__ == '__main__':
     # parse input arguments
     parser = argparse.ArgumentParser()
+    parser.add_argument("dataset", help="dataset name")
     parser.add_argument("-t", "--tap", type=int, help="number of taps")
 
     # read arguments from the command line
