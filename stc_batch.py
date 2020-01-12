@@ -127,16 +127,11 @@ def do_robust_stc(data, weight=None, channel_name=None):
     return eig_values, eig_vectors
 
 
+###############################################################################
+# STC
+###############################################################################
 def run_stc(stim, spike_train, info, tap=10, folder_name="stc", cov_algorithm="classic"):
-    # global ch_idx, channel_name, eig_values, eig_vectors
-    # # grab spike-triggered stim
-    # tap = 10
-    # spike_triggered_stim_all_channels, spike_count_all_channels = pysta.grab_spike_triggered_stim_all_channels(stim,
-    #                                                                                                            spike_train,
-    #                                                                                                            tap)
-    ###############################################################################
-    # STC
-    ###############################################################################
+
     kurtosis_coef = list()
     print("Doing STC...")
     for ch_idx in tqdm(range(num_channels)):
@@ -168,7 +163,7 @@ def run_stc(stim, spike_train, info, tap=10, folder_name="stc", cov_algorithm="c
         # do STC
         eig_values, eig_vectors = do_stc(data_centered, weights, cov_algorithm)
         np.savetxt("{}/{}_eig_val.txt".format(folder_name, channel_name), eig_values)
-        np.savez_compressed("{}/{}_eig_vec.npz".format(folder_name, channel_name), eig_vectors)
+        # np.savez_compressed("{}/{}_eig_vec.npz".format(folder_name, channel_name), eig_vectors)
 
         # plot STC results
         plot_stc_results(data_centered, eig_values, eig_vectors, folder_name, channel_name)
@@ -181,6 +176,7 @@ def run_stc(stim, spike_train, info, tap=10, folder_name="stc", cov_algorithm="c
     np.savetxt("{}/kurtosis.txt".format(folder_name), np.array(kurtosis_coef))
 
 
+# main function is here!
 if __name__ == '__main__':
     # parse input arguments
     parser = argparse.ArgumentParser()
@@ -211,51 +207,10 @@ if __name__ == '__main__':
     num_channels = spike_train.shape[0]
     # print(info["channel_names"])
 
-    folder_name = "stc_tap{}_center_half".format(tap)
+    folder_name = "{}_stc_tap{}".format(dataset, tap)
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
 
     # run_stc(stim, spike_train, info, tap=tap, folder_name="stc_smooth")
     run_stc(stim, spike_train, info, tap=tap, folder_name=folder_name)
 
-    exit(0)
-
-
-    eigen_values = list()
-
-
-
-    ###############################################################################
-    # Robust STC
-    ###############################################################################
-
-    print("Doing Robust STC")
-    for ch_idx in tqdm(range(len(spike_triggered_stim_all_channels))):
-        channel_name = info["channel_names"][ch_idx]
-        # print(channel_name)
-
-        # centering
-        # eig_values, eig_vectors = do_stc(spike_triggered_stim_all_channels[ch_idx])
-        eig_values, eig_vectors = do_robust_stc(spike_triggered_stim_all_channels[ch_idx], channel_name)
-
-        eigen_values.append(eig_values)
-
-        # plot eigenvalues
-        np.savetxt("rstc/{}_eig_values.png".format(channel_name), eig_values)
-        plt.figure(figsize=(7, 4))
-        plt.plot(eig_values, '*:')
-        plt.savefig("rstc/{}_eig_values.png".format(channel_name))
-        plt.close()
-
-        # plot 1st eigenvector of STC
-        pysta.plot_stim_slices(eig_vectors[:, 0], 8, 8, -0.1, 0.1, dt=1000/info["sampling_rate"])
-        plt.savefig("rstc/{}_ev_1st.png".format(channel_name))
-        plt.close()
-
-        # plot last non-zero eigenvector of STC
-        pysta.plot_stim_slices(eig_vectors[:, -1], 8, 8, -0.1, 0.1, dt=1000/info["sampling_rate"])
-        plt.savefig("rstc/{}_ev_last.png".format(channel_name))
-        plt.close()
-
-    eigen_values = np.array(eigen_values)
-    np.savetxt("stc/eigen_values.txt", eigen_values)
