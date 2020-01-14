@@ -52,7 +52,7 @@ def centering(data, weights=None):
 ###############################################################################
 # STC
 ###############################################################################
-def run_stc(stim, spike_train, info, tap=8, folder_name="stc", cov_algorithm="classic", spatial_smoothing=False):
+def run_stc(stim, spike_train, info, spatial_smoothing=True, tap=8, cov_algorithm="classic",  save_folder_name="stc"):
 
     kurtosis_coef = list()
     print("Doing STC...")
@@ -85,18 +85,18 @@ def run_stc(stim, spike_train, info, tap=8, folder_name="stc", cov_algorithm="cl
 
         # do STC
         eig_values, eig_vectors = do_stc(data_centered, weights, cov_algorithm)
-        np.savetxt("{}/{}_eig_val.txt".format(folder_name, channel_name), eig_values)
+        np.savetxt("{}/{}_eig_val.txt".format(save_folder_name, channel_name), eig_values)
         # np.savez_compressed("{}/{}_eig_vec.npz".format(folder_name, channel_name), eig_vectors)
 
         # plot STC results
-        plot_stc_results(data_centered, eig_values, eig_vectors, folder_name, channel_name)
+        plot_stc_results(data_centered, eig_values, eig_vectors, save_folder_name, channel_name)
         # eigen_values.append(eig_values)
 
         # calc kurtosis of the 1st coef
         kurtosis_coef.append(calc_kurtosis(data_centered, eig_vectors))
 
     # save kurtosis
-    np.savetxt("{}/kurtosis.txt".format(folder_name), np.array(kurtosis_coef))
+    np.savetxt("{}/kurtosis.txt".format(save_folder_name), np.array(kurtosis_coef))
 
 
 ###############################################################################
@@ -168,6 +168,7 @@ if __name__ == '__main__':
     # parse input arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("dataset", help="dataset name")
+    parser.add_argument("-s", "--smooth", type=bool, default=True, help="spatial smoothing")
     parser.add_argument("-t", "--tap", type=int, help="number of taps")
     parser.add_argument("-c", "--cov_algorithm", default="classic", choices=["classic", "robust"], help="algorithm for calculating covariance")
 
@@ -195,9 +196,13 @@ if __name__ == '__main__':
     num_channels = spike_train.shape[0]
     # print(info["channel_names"])
 
-    folder_name = "{}_stc_tap{}_{}".format(dataset, tap, args.cov_algorithm)
+    if args.smooth:
+        str_smooth = "smoothed"
+    else:
+        str_smooth = ""
+    folder_name = "{}_stc_{}_tap{}_{}".format(dataset, str_smooth, tap, args.cov_algorithm)
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
 
     # run_stc(stim, spike_train, info, tap=tap, folder_name="stc_smooth")
-    run_stc(stim, spike_train, info, tap=tap, folder_name=folder_name, cov_algorithm=args.cov_algorithm)
+    run_stc(stim, spike_train, info, spatial_smoothing=args.smooth, tap=tap, cov_algorithm=args.cov_algorithm, save_folder_name=folder_name)
