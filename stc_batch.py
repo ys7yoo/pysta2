@@ -168,7 +168,7 @@ if __name__ == '__main__':
     # parse input arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("dataset", help="dataset name")
-    parser.add_argument("-s", "--smooth", type=bool, default=False, help="spatial smoothing")
+    parser.add_argument("-s", "--smooth", action='store_true', default=False, help="spatial smoothing")
     parser.add_argument("-t", "--tap", type=int, help="number of taps")
     parser.add_argument("-c", "--cov_algorithm", default="classic", choices=["classic", "robust"], help="algorithm for calculating covariance")
 
