@@ -130,7 +130,7 @@ def do_robust_stc(data, weight=None, channel_name=None):
 ###############################################################################
 # STC
 ###############################################################################
-def run_stc(stim, spike_train, info, tap=10, folder_name="stc", cov_algorithm="classic"):
+def run_stc(stim, spike_train, info, tap=10, folder_name="stc", cov_algorithm="classic", spatial_smoothing=False):
 
     kurtosis_coef = list()
     print("Doing STC...")
@@ -145,12 +145,13 @@ def run_stc(stim, spike_train, info, tap=10, folder_name="stc", cov_algorithm="c
         num_samples = data.shape[0]
         weights = spike_count
 
-        # spatial smoothing
-        sig = np.sqrt(0.25)
-        data_smoothed = smoothe_stim(data, sig)
+        if spatial_smoothing:
+            # spatial smoothing
+            sig = np.sqrt(0.25)
+            data = smoothe_stim(data, sig)
 
-        # stack rows
-        data_row = data_smoothed.reshape([num_samples, -1])
+        # stack data into rows
+        data_row = data.reshape([num_samples, -1])
 
         # centering by sta
         # data_centered, center = centering(data_row, weights)
