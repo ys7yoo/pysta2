@@ -8,10 +8,16 @@ import stc
 
 import argparse
 
+
 def do_stc(data_centered, weights=None, cov_algorithm="classic"):
 
     # calc covariance
-    covariance_mat = stc.calc_covariance_matrix(data_centered, weights, centered=True)
+    if cov_algorithm == "classic":
+        covariance_mat = stc.calc_covariance_matrix(data_centered, weights, centered=True)
+    elif cov_algorithm == "robust":
+        covariance_mat = stc.calc_robust_covariance_matrix(data_centered)
+    else:
+        raise ValueError("[wrong param] cov_algorithm must be classic or robust")
 
     # eigen analysis
     eig_values, eig_vectors = stc.calc_eig_values_and_vectors(covariance_mat)
@@ -22,6 +28,7 @@ def do_stc(data_centered, weights=None, cov_algorithm="classic"):
     eig_vectors = eig_vectors[:,:r]  # keep the first r columns
 
     return eig_values, eig_vectors
+
 
 def smoothe_stim(spike_triggered_stim, sig):
     # smooth stim
@@ -42,8 +49,103 @@ def centering(data, weights=None):
     return data_centered, center
 
 
-from scipy.stats import kurtosis
 
+###############################################################################
+# STC
+###############################################################################
+def run_stc(stim, spike_train, info, tap=8, folder_name="stc", cov_algorithm="classic", spatial_smoothing=False):
+
+    kurtosis_coef = list()
+    print("Doing STC...")
+    for ch_idx in tqdm(range(num_channels)):
+        channel_name = info["channel_names"][ch_idx]
+        # print(channel_name)
+
+        # grab spike-triggered stim
+        spike_triggered_stim, spike_count = pysta.grab_spike_triggered_stim(stim, spike_train[ch_idx, :], tap)
+
+        data = spike_triggered_stim
+        num_samples = data.shape[0]
+        weights = spike_count
+
+        if spatial_smoothing:
+            # spatial smoothing
+            sig = np.sqrt(0.25)
+            data = smoothe_stim(data, sig)
+
+        # stack data into rows
+        data_row = data.reshape([num_samples, -1])
+
+        # centering by sta
+        # data_centered, center = centering(data_row, weights)
+
+        # center on all-half vector
+        dim = data_row.shape[1]
+        center = 0.5*np.ones((1,dim))
+        data_centered = data_row - center
+
+        # do STC
+        eig_values, eig_vectors = do_stc(data_centered, weights, cov_algorithm)
+        np.savetxt("{}/{}_eig_val.txt".format(folder_name, channel_name), eig_values)
+        # np.savez_compressed("{}/{}_eig_vec.npz".format(folder_name, channel_name), eig_vectors)
+
+        # plot STC results
+        plot_stc_results(data_centered, eig_values, eig_vectors, folder_name, channel_name)
+        # eigen_values.append(eig_values)
+
+        # calc kurtosis of the 1st coef
+        kurtosis_coef.append(calc_kurtosis(data_centered, eig_vectors))
+
+    # save kurtosis
+    np.savetxt("{}/kurtosis.txt".format(folder_name), np.array(kurtosis_coef))
+
+
+# main function is here!
+if __name__ == '__main__':
+    # parse input arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("dataset", help="dataset name")
+    parser.add_argument("-t", "--tap", type=int, help="number of taps")
+    parser.add_argument("-c", "--cov_algorithm", default="classic", choices=["classic", "robust"], help="algorithm for calculating covariance")
+
+    # read arguments from the command line
+    args = parser.parse_args()
+
+    # get dataset name
+    if args.dataset:
+        dataset = args.dataset
+    else:
+        print("provide dataset name!")
+        exit(-1)
+
+    if args.tap:
+        tap = args.tap
+    else:
+        tap = 8  # default is to use 8 taps
+    print("number of tap is {}.".format(tap))
+
+    # load data
+    print("loading data...")
+    # load stim and spike data
+    filename = "data/{}.mat".format(dataset)
+    stim, spike_train, info = pysta.load_data(filename)
+    num_channels = spike_train.shape[0]
+    # print(info["channel_names"])
+
+    folder_name = "{}_stc_tap{}_{}".format(dataset, tap, args.cov_algorithm)
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+
+    # run_stc(stim, spike_train, info, tap=tap, folder_name="stc_smooth")
+    run_stc(stim, spike_train, info, tap=tap, folder_name=folder_name, cov_algorithm=args.cov_algorithm)
+
+
+###############################################################################
+# some other helper functions
+###############################################################################
+
+
+from scipy.stats import kurtosis
 
 def calc_kurtosis(data_centered, eig_vectors):
     projected = stc.project(data_centered, eig_vectors[:, 0])
@@ -100,118 +202,3 @@ def plot_stc_results(data_centered, eig_values, eig_vectors, folder_name, channe
         plt.ylabel("count")
     plt.savefig("{}/{}_projected_hist.png".format(folder_name, channel_name))
     plt.close()
-
-
-def do_robust_stc(data, weight=None, channel_name=None):
-    num_samples = data.shape[0]
-    data = data.reshape([num_samples, -1])
-    dim = data.shape[1]
-    center = np.mean(data, axis=0, keepdims=True)
-    data_centered = data - center
-
-    # calc covariance
-    covariance_mat = stc.calc_robust_covariance_matrix(data_centered)
-
-    # eigen analysis
-    eig_values, eig_vectors = stc.calc_eig_values_and_vectors(covariance_mat)
-
-    # project
-    if channel_name:
-        projected = stc.project(data_centered, eig_vectors)  # [:,0:7]
-
-        plt.figure(figsize=(6.5, 5))
-        plt.scatter(projected[:, 0], projected[:, 1], color='k')
-        plt.savefig("rstc/{}_projected.png".format(channel_name))
-        plt.close()
-
-    return eig_values, eig_vectors
-
-
-###############################################################################
-# STC
-###############################################################################
-def run_stc(stim, spike_train, info, tap=10, folder_name="stc", cov_algorithm="classic", spatial_smoothing=False):
-
-    kurtosis_coef = list()
-    print("Doing STC...")
-    for ch_idx in tqdm(range(num_channels)):
-        channel_name = info["channel_names"][ch_idx]
-        # print(channel_name)
-
-        # grab spike-triggered stim
-        spike_triggered_stim, spike_count = pysta.grab_spike_triggered_stim(stim, spike_train[ch_idx, :], tap)
-
-        data = spike_triggered_stim
-        num_samples = data.shape[0]
-        weights = spike_count
-
-        if spatial_smoothing:
-            # spatial smoothing
-            sig = np.sqrt(0.25)
-            data = smoothe_stim(data, sig)
-
-        # stack data into rows
-        data_row = data.reshape([num_samples, -1])
-
-        # centering by sta
-        # data_centered, center = centering(data_row, weights)
-
-        # center on all-half vector
-        dim = data_row.shape[1]
-        center = 0.5*np.ones((1,dim))
-        data_centered = data_row - center
-
-        # do STC
-        eig_values, eig_vectors = do_stc(data_centered, weights, cov_algorithm)
-        np.savetxt("{}/{}_eig_val.txt".format(folder_name, channel_name), eig_values)
-        # np.savez_compressed("{}/{}_eig_vec.npz".format(folder_name, channel_name), eig_vectors)
-
-        # plot STC results
-        plot_stc_results(data_centered, eig_values, eig_vectors, folder_name, channel_name)
-        # eigen_values.append(eig_values)
-
-        # calc kurtosis of the 1st coef
-        kurtosis_coef.append(calc_kurtosis(data_centered, eig_vectors))
-
-    # save kurtosis
-    np.savetxt("{}/kurtosis.txt".format(folder_name), np.array(kurtosis_coef))
-
-
-# main function is here!
-if __name__ == '__main__':
-    # parse input arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument("dataset", help="dataset name")
-    parser.add_argument("-t", "--tap", type=int, help="number of taps")
-
-    # read arguments from the command line
-    args = parser.parse_args()
-
-    # get dataset name
-    if args.dataset:
-        dataset = args.dataset
-    else:
-        print("provide dataset name!")
-        exit(-1)
-
-    if args.tap:
-        tap = args.tap
-    else:
-        tap = 8  # default is to use 10 taps
-    print("number of tap is {}.".format(tap))
-
-    # load data
-    print("loading data...")
-    # load stim and spike data
-    filename = "data/{}.mat".format(dataset)
-    stim, spike_train, info = pysta.load_data(filename)
-    num_channels = spike_train.shape[0]
-    # print(info["channel_names"])
-
-    folder_name = "{}_stc_tap{}".format(dataset, tap)
-    if not os.path.exists(folder_name):
-        os.makedirs(folder_name)
-
-    # run_stc(stim, spike_train, info, tap=tap, folder_name="stc_smooth")
-    run_stc(stim, spike_train, info, tap=tap, folder_name=folder_name)
-
