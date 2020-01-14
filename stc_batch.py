@@ -197,10 +197,10 @@ if __name__ == '__main__':
     # print(info["channel_names"])
 
     if args.smooth:
-        str_smooth = "smoothed"
+        str_smooth = "smoothed_"
     else:
         str_smooth = ""
-    folder_name = "{}_stc_{}_tap{}_{}".format(dataset, str_smooth, tap, args.cov_algorithm)
+    folder_name = "{}_stc_{}tap{}_{}".format(dataset, str_smooth, tap, args.cov_algorithm)
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
 
