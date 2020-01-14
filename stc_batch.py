@@ -49,7 +49,6 @@ def centering(data, weights=None):
     return data_centered, center
 
 
-
 ###############################################################################
 # STC
 ###############################################################################
@@ -100,51 +99,9 @@ def run_stc(stim, spike_train, info, tap=8, folder_name="stc", cov_algorithm="cl
     np.savetxt("{}/kurtosis.txt".format(folder_name), np.array(kurtosis_coef))
 
 
-# main function is here!
-if __name__ == '__main__':
-    # parse input arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument("dataset", help="dataset name")
-    parser.add_argument("-t", "--tap", type=int, help="number of taps")
-    parser.add_argument("-c", "--cov_algorithm", default="classic", choices=["classic", "robust"], help="algorithm for calculating covariance")
-
-    # read arguments from the command line
-    args = parser.parse_args()
-
-    # get dataset name
-    if args.dataset:
-        dataset = args.dataset
-    else:
-        print("provide dataset name!")
-        exit(-1)
-
-    if args.tap:
-        tap = args.tap
-    else:
-        tap = 8  # default is to use 8 taps
-    print("number of tap is {}.".format(tap))
-
-    # load data
-    print("loading data...")
-    # load stim and spike data
-    filename = "data/{}.mat".format(dataset)
-    stim, spike_train, info = pysta.load_data(filename)
-    num_channels = spike_train.shape[0]
-    # print(info["channel_names"])
-
-    folder_name = "{}_stc_tap{}_{}".format(dataset, tap, args.cov_algorithm)
-    if not os.path.exists(folder_name):
-        os.makedirs(folder_name)
-
-    # run_stc(stim, spike_train, info, tap=tap, folder_name="stc_smooth")
-    run_stc(stim, spike_train, info, tap=tap, folder_name=folder_name, cov_algorithm=args.cov_algorithm)
-
-
 ###############################################################################
 # some other helper functions
 ###############################################################################
-
-
 from scipy.stats import kurtosis
 
 def calc_kurtosis(data_centered, eig_vectors):
@@ -202,3 +159,45 @@ def plot_stc_results(data_centered, eig_values, eig_vectors, folder_name, channe
         plt.ylabel("count")
     plt.savefig("{}/{}_projected_hist.png".format(folder_name, channel_name))
     plt.close()
+
+
+###############################################################################
+# main function is here!
+###############################################################################
+if __name__ == '__main__':
+    # parse input arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("dataset", help="dataset name")
+    parser.add_argument("-t", "--tap", type=int, help="number of taps")
+    parser.add_argument("-c", "--cov_algorithm", default="classic", choices=["classic", "robust"], help="algorithm for calculating covariance")
+
+    # read arguments from the command line
+    args = parser.parse_args()
+
+    # get dataset name
+    if args.dataset:
+        dataset = args.dataset
+    else:
+        print("provide dataset name!")
+        exit(-1)
+
+    if args.tap:
+        tap = args.tap
+    else:
+        tap = 8  # default is to use 8 taps
+    print("number of tap is {}.".format(tap))
+
+    # load data
+    print("loading data...")
+    # load stim and spike data
+    filename = "data/{}.mat".format(dataset)
+    stim, spike_train, info = pysta.load_data(filename)
+    num_channels = spike_train.shape[0]
+    # print(info["channel_names"])
+
+    folder_name = "{}_stc_tap{}_{}".format(dataset, tap, args.cov_algorithm)
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+
+    # run_stc(stim, spike_train, info, tap=tap, folder_name="stc_smooth")
+    run_stc(stim, spike_train, info, tap=tap, folder_name=folder_name, cov_algorithm=args.cov_algorithm)
