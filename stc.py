@@ -1,5 +1,4 @@
 import numpy as np
-from sklearn.covariance import MinCovDet
 from math import pi
 from matplotlib import pyplot as plt
 
@@ -32,12 +31,43 @@ def calc_covariance_matrix(data_row, weights=None, centered=False):
             C = np.dot(data_row.T, data_row) / (np.sum(weights) - 1)
     else:
         C = np.cov(data_row, rowvar=False, fweights=weights)
-    return 0.5*(C+C.T)
+    return C
+    #return 0.5*(C+C.T)
 
 
-def calc_robust_covariance_matrix(data, centered=True):
-    C = MinCovDet(random_state=0, assume_centered=centered).fit(data).covariance_
-    return 0.5*(C+C.T)
+from sklearn.covariance import MinCovDet # from sklean
+# from robust_covariance import MinCovDet # modified to use weights
+
+
+def inflate_data_using_weights(data_row, weights):
+    data_stacked = data_row.copy()
+    dim = data_stacked.shape[1]
+
+    weights = weights.copy()
+    max_weight = np.ceil(np.max(weights)).astype(int)
+    # print(max_weight)
+
+    # copy one time
+    weights -= 1
+
+    # copy more samples for non-zero weights
+    for rep in range(max_weight-1):
+        for i, w in enumerate(weights):
+            if w > 0:
+                # print(data_stacked.shape, data_row[i,:].shape)
+                data_stacked = np.concatenate((data_stacked, data_row[i,:].reshape(1,dim)),axis=0)
+                weights[i] -= 1
+
+    return data_stacked
+
+
+def calc_robust_covariance_matrix(data_row, weights=None, centered=True, random_state=None):
+    if weights is not None:
+        data_row = inflate_data_using_weights(data_row, weights)
+
+    C = MinCovDet(assume_centered=centered, random_state=random_state).fit(data_row).covariance_
+    return C
+    #return 0.5*(C+C.T)
 
 
 def calc_eig_values_and_vectors(covariance_matrix):

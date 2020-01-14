@@ -8,6 +8,10 @@ Here are implemented estimators that are resistant to outliers.
 #
 # License: BSD 3 clause
 
+# info
+# https: // scikit - learn.org / stable / modules / generated / sklearn.covariance.MinCovDet.html
+# https://github.com/scikit-learn/scikit-learn/blob/b194674c4/sklearn/covariance/_robust_covariance.py#L512
+
 import warnings
 import numbers
 import numpy as np

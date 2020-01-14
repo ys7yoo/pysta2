@@ -22,7 +22,7 @@ def grab_spike_triggered_stim(stim, spike, tap):
             
             # spike
     
-    return np.array(spike_trigered_stim), np.array(spike_count)
+    return np.array(spike_trigered_stim), np.array(spike_count).astype(int)
 
 
 def grab_spike_triggered_stim_all_channels(stim, spike_train,tap):
