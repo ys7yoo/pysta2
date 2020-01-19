@@ -163,8 +163,7 @@ if __name__ == '__main__':
     # load data
     print("loading data...")
     # load stim and spike data
-    filename = "data/{}.mat".format(dataset)
-    stim, spike_train, info = pysta.load_data(filename)
+    stim, spike_train, info = pysta.load_data(dataset, "data")
     num_channels = spike_train.shape[0]
     # print(info["channel_names"])
 
