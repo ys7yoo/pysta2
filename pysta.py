@@ -198,13 +198,13 @@ def plot_stim_slices(stim, width=8, height=8, vmin=0.2, vmax=0.8, dt=None):
                 plt.title("{:.0f} ms".format(-dt*(T-t-1)))
 
 
-
 from scipy.ndimage import gaussian_filter
+
 
 def smoothe_each_slice(stim, width=8, height=8, sigma=0.25):
     original_shape = stim.shape
 
-    if stim.ndim in [1,2]:
+    if stim.ndim in [1, 2]:
         stim = stim.reshape([height, width, -1])
     else:
         assert height == stim.shape[0]
@@ -213,11 +213,21 @@ def smoothe_each_slice(stim, width=8, height=8, sigma=0.25):
     smoothed = np.zeros_like(stim)
 
     for t in range(stim.shape[-1]):
-        smoothed[:,:,t] = gaussian_filter(stim[:,:,t], sigma=sigma)
+        smoothed[:, :, t] = gaussian_filter(stim[:, :, t], sigma=sigma)
 
     smoothed = smoothed.reshape(original_shape)
 
     return smoothed
+
+
+def smoothe_stim(spike_triggered_stim, sig):
+    # smooth stim
+    num_samples = spike_triggered_stim.shape[0]
+    smoothed_spike_triggered_stim = [smoothe_each_slice(spike_triggered_stim[i, :, :], sigma=sig) for i in
+                                     range(num_samples)]
+    smoothed_spike_triggered_stim = np.array(smoothed_spike_triggered_stim)
+
+    return smoothed_spike_triggered_stim
 
 
 # plot ellipse using 2-dim Gaussian distribution

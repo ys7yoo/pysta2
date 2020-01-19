@@ -9,14 +9,7 @@ import stc
 import argparse
 
 
-def smoothe_stim(spike_triggered_stim, sig):
-    # smooth stim
-    num_samples = spike_triggered_stim.shape[0]
-    smoothed_spike_triggered_stim = [pysta.smoothe_each_slice(spike_triggered_stim[i, :, :], sigma=sig) for i in
-                                     range(num_samples)]
-    smoothed_spike_triggered_stim = np.array(smoothed_spike_triggered_stim)
 
-    return smoothed_spike_triggered_stim
 
 
 def centering(data, weights=None):
