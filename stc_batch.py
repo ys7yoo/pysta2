@@ -24,7 +24,7 @@ def centering(data, weights=None):
 ###############################################################################
 # STC
 ###############################################################################
-def run_stc(stim, spike_train, info, spatial_smoothing=True, tap=8, cov_algorithm="classic",  save_folder_name="stc"):
+def run_stc(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algorithm="classic",  save_folder_name="stc"):
 
     kurtosis_coef = list()
     print("Doing STC...")
@@ -39,10 +39,10 @@ def run_stc(stim, spike_train, info, spatial_smoothing=True, tap=8, cov_algorith
         num_samples = data.shape[0]
         weights = spike_count
 
-        if spatial_smoothing:
+        if spatial_smoothing_sigma > 0:
             # spatial smoothing
-            sig = np.sqrt(0.25)
-            data = smoothe_stim(data, sig)
+            # sig = np.sqrt(0.25)
+            data = pysta.smoothe_stim(data, spatial_smoothing_sigma)
 
         # stack data into rows
         data_row = data.reshape([num_samples, -1])
@@ -140,7 +140,7 @@ if __name__ == '__main__':
     # parse input arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("dataset", help="dataset name")
-    parser.add_argument("-s", "--smooth", action='store_true', default=False, help="spatial smoothing")
+    parser.add_argument("-s", "--sigma", type=float, default=0, help="sigma for spatial smoothing")
     parser.add_argument("-t", "--tap", type=int, help="number of taps")
     parser.add_argument("-c", "--cov_algorithm", default="classic", choices=["classic", "robust"], help="algorithm for calculating covariance")
 
@@ -168,8 +168,8 @@ if __name__ == '__main__':
     num_channels = spike_train.shape[0]
     # print(info["channel_names"])
 
-    if args.smooth:
-        str_smooth = "smoothed_"
+    if args.sigma > 0:
+        str_smooth = "smoothed_{}".format(args.sigma)
     else:
         str_smooth = ""
     folder_name = "{}_stc_{}tap{}_{}".format(dataset, str_smooth, tap, args.cov_algorithm)
@@ -177,4 +177,4 @@ if __name__ == '__main__':
         os.makedirs(folder_name)
 
     # run_stc(stim, spike_train, info, tap=tap, folder_name="stc_smooth")
-    run_stc(stim, spike_train, info, spatial_smoothing=args.smooth, tap=tap, cov_algorithm=args.cov_algorithm, save_folder_name=folder_name)
+    run_stc(stim, spike_train, info, spatial_smoothing_sigma=args.smooth, tap=tap, cov_algorithm=args.cov_algorithm, save_folder_name=folder_name)
