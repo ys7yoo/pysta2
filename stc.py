@@ -3,7 +3,7 @@ from math import pi
 from matplotlib import pyplot as plt
 
 
-def do_stc(data_centered, weights=None, cov_algorithm="classic"):
+def do_stc(data_centered, weights=None, cov_algorithm="classic", num_components=None):
 
     # calc covariance
     if cov_algorithm == "classic":
@@ -16,10 +16,12 @@ def do_stc(data_centered, weights=None, cov_algorithm="classic"):
     # eigen analysis
     eig_values, eig_vectors = calc_eig_values_and_vectors(covariance_mat)
 
-    # only keep non-zero eigenvalues
-    r = np.min(data_centered.shape)
-    eig_values = eig_values[:r]
-    eig_vectors = eig_vectors[:, :r]  # keep the first r columns
+    # only keep num_components eigenvalues
+    if num_components is None:
+        num_components = np.min(data_centered.shape)
+    if eig_values.shape[0] > num_components:
+        eig_values = eig_values[:num_components]
+        eig_vectors = eig_vectors[:, :num_components]  # keep first num_components columns
 
     return eig_values, eig_vectors
 
