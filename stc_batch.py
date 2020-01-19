@@ -141,7 +141,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("dataset", help="dataset name")
     parser.add_argument("-s", "--sigma", type=float, default=0, help="sigma for spatial smoothing")
-    parser.add_argument("-t", "--tap", type=int, help="number of taps")
+    parser.add_argument("-t", "--tap", type=int, default=8, help="number of taps")
     parser.add_argument("-c", "--cov_algorithm", default="classic", choices=["classic", "robust"], help="algorithm for calculating covariance")
 
     # read arguments from the command line
@@ -154,11 +154,7 @@ if __name__ == '__main__':
         print("provide dataset name!")
         exit(-1)
 
-    if args.tap:
-        tap = args.tap
-    else:
-        tap = 8  # default is to use 8 taps
-    print("number of tap is {}.".format(tap))
+    print("number of tap is {}.".format(args.tap))
 
     # load data
     print("loading data...")
@@ -171,9 +167,9 @@ if __name__ == '__main__':
         str_smooth = "smoothed_{}".format(args.sigma)
     else:
         str_smooth = ""
-    folder_name = "{}_stc_{}tap{}_{}".format(dataset, str_smooth, tap, args.cov_algorithm)
+    folder_name = "{}_stc_{}tap{}_{}".format(dataset, str_smooth, args.tap, args.cov_algorithm)
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
 
     # run_stc(stim, spike_train, info, tap=tap, folder_name="stc_smooth")
-    run_stc(stim, spike_train, info, spatial_smoothing_sigma=args.smooth, tap=tap, cov_algorithm=args.cov_algorithm, save_folder_name=folder_name)
+    run_stc(stim, spike_train, info, spatial_smoothing_sigma=args.sigma, tap=args.tap, cov_algorithm=args.cov_algorithm, save_folder_name=folder_name)
