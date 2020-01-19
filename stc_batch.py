@@ -9,27 +9,6 @@ import stc
 import argparse
 
 
-def do_stc(data_centered, weights=None, cov_algorithm="classic"):
-
-    # calc covariance
-    if cov_algorithm == "classic":
-        covariance_mat = stc.calc_covariance_matrix(data_centered, weights, centered=True)
-    elif cov_algorithm == "robust":
-        covariance_mat = stc.calc_robust_covariance_matrix(data_centered)
-    else:
-        raise ValueError("[wrong param] cov_algorithm must be classic or robust")
-
-    # eigen analysis
-    eig_values, eig_vectors = stc.calc_eig_values_and_vectors(covariance_mat)
-
-    # only keep non-zero eigenvalues
-    r = np.min(data_centered.shape)
-    eig_values = eig_values[:r]
-    eig_vectors = eig_vectors[:,:r]  # keep the first r columns
-
-    return eig_values, eig_vectors
-
-
 def smoothe_stim(spike_triggered_stim, sig):
     # smooth stim
     num_samples = spike_triggered_stim.shape[0]
