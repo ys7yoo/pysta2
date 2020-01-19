@@ -2,6 +2,7 @@ import numpy as np
 import h5py
 import matplotlib.pyplot as plt
 
+import os
 
 def grab_spike_triggered_stim(stim, spike, tap):
     
@@ -73,7 +74,7 @@ def read_mat_cell_2d(hf, key):
     return data
     
 
-def load_data(filename):
+def load_data_mat(filename):
 
     info = dict()
     with h5py.File(filename,'r') as hf:
@@ -93,6 +94,19 @@ def load_data(filename):
         print('sampling_rate: ', sampling_rate)
         info["sampling_rate"] = sampling_rate
     
+    return stim, spike_train, info
+
+
+def load_data(dataset_name, folder_name=""):
+    with np.load(os.path.join(folder_name,dataset_name)+".npz", allow_pickle=True) as data:
+        print(data.files)
+        stim=data["stim"]
+        spike_train=data["spike_train"]
+        info=data["info"].item()
+    print(stim.shape)
+    print(spike_train.shape)
+    print(info)
+
     return stim, spike_train, info
 
 
