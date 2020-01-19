@@ -63,7 +63,7 @@ def run_stc(stim, spike_train, info, spatial_smoothing=True, tap=8, cov_algorith
         data_centered = data_row - center
 
         # do STC
-        eig_values, eig_vectors = do_stc(data_centered, weights, cov_algorithm)
+        eig_values, eig_vectors = stc.do_stc(data_centered, weights, cov_algorithm)
         np.savetxt("{}/{}_eig_val.txt".format(save_folder_name, channel_name), eig_values)
         # np.savez_compressed("{}/{}_eig_vec.npz".format(folder_name, channel_name), eig_vectors)
 
