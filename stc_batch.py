@@ -164,7 +164,7 @@ if __name__ == '__main__':
     # print(info["channel_names"])
 
     if args.sigma > 0:
-        str_smooth = "smoothed_{}".format(args.sigma)
+        str_smooth = "smoothed_{}_".format(args.sigma)
     else:
         str_smooth = ""
     folder_name = "{}_stc_{}tap{}_{}".format(dataset, str_smooth, args.tap, args.cov_algorithm)
