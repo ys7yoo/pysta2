@@ -92,7 +92,7 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
         weighted_center = np.average(data_row, weights=spike_count, axis=0)  # to compare
 
         # calc inner product of two centers
-        inner_product = np.dot(group_center[0]-center, group_center[1]-center)
+        inner_product = np.dot(group_center[0].ravel()-center.ravel(), group_center[1].ravel()-center.ravel())
 
 
         # save clustering results to lists
