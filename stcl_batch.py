@@ -220,7 +220,7 @@ if __name__ == '__main__':
         str_smooth = "sigma{:.3f}_".format(args.sigma)
     else:
         str_smooth = ""
-    folder_name = "{}_{}tap{}_stc_{}_cluster".format(dataset, str_smooth, args.tap, args.cov_algorithm)
+    folder_name = "{}_{}tap{}_stc_{}_cluster_dim{}".format(dataset, str_smooth, args.tap, args.cov_algorithm, args.dim)
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
 
