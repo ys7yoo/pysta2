@@ -113,12 +113,15 @@ def load_data(dataset_name, folder_name=""):
     print(stim.shape)
     print(spike_train.shape)
 
-    # load cell type and merge it to info
-    cell_types_df = load_cell_type(dataset_name, folder_name)
+    # remove "ch_" from info["channel_names"]
     channel_names = [ch.replace("ch_", "") for ch in info["channel_names"]]
-    channel_names_df = pd.DataFrame({"channel_name": channel_names})
+    info["channel_names"] = channel_names
 
-    merged_df= channel_names_df.merge(cell_types_df, on="channel_name", how="outer")
+    # load cell type and merge it to info
+    channel_names_df = pd.DataFrame({"channel_name": channel_names})
+    cell_types_df = load_cell_type(dataset_name, folder_name)
+
+    merged_df = channel_names_df.merge(cell_types_df, on="channel_name", how="outer")
     merged_df.fillna('unknown', inplace=True)
 
     info["cell_types"] = list(merged_df["cell_type"])
