@@ -118,7 +118,10 @@ def load_data(dataset_name, folder_name=""):
     channel_names = [ch.replace("ch_", "") for ch in info["channel_names"]]
     channel_names_df = pd.DataFrame({"channel_name": channel_names})
 
-    info["cell_types"] = list(channel_names_df.merge(cell_types_df, on="channel_name", how="outer")["cell_type"])
+    merged_df= channel_names_df.merge(cell_types_df, on="channel_name", how="outer")
+    merged_df.fillna('unknown', inplace=True)
+
+    info["cell_types"] = list(merged_df["cell_type"])
 
     print(info)
 
