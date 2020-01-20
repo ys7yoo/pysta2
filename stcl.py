@@ -7,12 +7,15 @@ from matplotlib import pyplot as plt
 # fit mixture of Gaussians
 from sklearn.mixture import GaussianMixture
 
-def fit(feature, initial_pred):
+
+def fit(feature, initial_pred=None):
 
     # dim = feature.shape[1]
+    if initial_pred is None:
+        initial_pred = feature[:,0]
 
-    means_init = [np.mean(feature[initial_pred<0], axis=0),np.mean(feature[initial_pred>0], axis=0)]
-    gm = GaussianMixture(n_components=2, n_init=10, means_init=means_init)
+    means_init = [np.mean(feature[initial_pred<=0], axis=0),np.mean(feature[initial_pred>0], axis=0)]
+    gm = GaussianMixture(n_components=2, n_init=20, means_init=means_init)
     gm.fit(feature)
 
     print("converged=", gm.converged_)
@@ -32,15 +35,23 @@ def calc_centers(spike_triggered_stim_row, spike_count, pred):
 
     return centers
 
-def plot_centers(centers, grid_T, weights=None):
-    num_centers = len(centers)
+
+def plot_centers(center, group_center, grid_T, weights=None, vmin=0, vmax=1):
+    num_centers = len(group_center)
     plt.figure(figsize=(6*num_centers,5))
 
     colors = ['b','r','g']
+
+    # plot center
+    ax = plt.subplot(1, num_centers+1, 1)
+    plt.plot(grid_T, center.reshape([8 * 8, -1]).T, 'k', alpha=0.3)
+    ax.set_ylim(vmin, vmax)
+
+
     for i in range(num_centers):
-        ax=plt.subplot(1,num_centers,i+1)
-        plt.plot(grid_T, centers[i].reshape([8*8,-1]).T, colors[i], alpha=0.3)
-        ax.set_ylim(0.2,0.8)
+        ax=plt.subplot(1,num_centers+1,i+2)
+        plt.plot(grid_T, group_center[i].reshape([8 * 8, -1]).T, colors[i], alpha=0.3)
+        ax.set_ylim(vmin,vmax)
         if weights is None:
             plt.title("average stim group {}".format(i+1))
         else:
