@@ -1,6 +1,7 @@
 import numpy as np
 import h5py
 import matplotlib.pyplot as plt
+import pandas as pd
 
 import os
 
@@ -97,14 +98,28 @@ def load_data_mat(filename):
     return stim, spike_train, info
 
 
+def load_cell_type(dataset_name, folder_name=""):
+    cell_types_df = pd.read_csv(os.path.join(folder_name, "{}_cell_type.csv".format(dataset_name)))
+
+    return cell_types_df
+
+
 def load_data(dataset_name, folder_name=""):
     with np.load(os.path.join(folder_name,dataset_name)+".npz", allow_pickle=True) as data:
         print(data.files)
-        stim=data["stim"]
-        spike_train=data["spike_train"]
-        info=data["info"].item()
+        stim = data["stim"]
+        spike_train = data["spike_train"]
+        info = data["info"].item()
     print(stim.shape)
     print(spike_train.shape)
+
+    # load cell type and merge it to info
+    cell_types_df = load_cell_type(dataset_name, folder_name)
+    channel_names = [ch.replace("ch_", "") for ch in info["channel_names"]]
+    channel_names_df = pd.DataFrame({"channel_name": channel_names})
+
+    info["cell_types"] = list(channel_names_df.merge(cell_types_df, on="channel_name", how="outer")["cell_type"])
+
     print(info)
 
     return stim, spike_train, info
