@@ -122,5 +122,5 @@ if __name__ == '__main__':
 
     sta_result = do_sta(spike_triggered_stim_all_channels, spike_count_all_channels, info, folder_name) # weighted average
     # sta_result = do_sta(spike_triggered_stim_all_channels)  # simple mean
-    sta_result.to_csv(os.path.join(folder_name, "sta_result.csv"), index=None)
+    sta_result.to_csv(os.path.join(folder_name, "stat.csv"), index=None)
 
