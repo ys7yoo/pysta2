@@ -50,6 +50,7 @@ if __name__ == '__main__':
 
     # parse input arguments
     parser = argparse.ArgumentParser()
+    parser.add_argument("dataset", help="dataset name")
     parser.add_argument("-t", "--tap", type=int, default=8, help="number of taps")
 
     # read arguments from the command line
