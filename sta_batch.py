@@ -50,31 +50,34 @@ if __name__ == '__main__':
 
     # parse input arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--tap", type=int, help="number of taps")
+    parser.add_argument("-t", "--tap", type=int, default=8, help="number of taps")
 
     # read arguments from the command line
     args = parser.parse_args()
-    if args.tap:
-        tap = args.tap
+
+    # get dataset name
+    if args.dataset:
+        dataset = args.dataset
     else:
-        tap = 8  # default is to use 10 taps
-    print("number of tap is {}.".format(tap))
+        print("provide dataset name!")
+        exit(-1)
+
+    print("number of tap is {}.".format(args.tap))
 
     # load data
     print("loading data...")
     # load stim and spike data
-    filename = "data/0626.mat"
-    stim, spike_train, info = pysta.load_data(filename)
+    stim, spike_train, info = pysta.load_data(dataset, "data")
+    num_channels = spike_train.shape[0]
     # print(info["channel_names"])
-
 
     # grab spike-triggered stim
     spike_triggered_stim_all_channels, spike_count_all_channels = pysta.grab_spike_triggered_stim_all_channels(stim,
                                                                                                                spike_train,
-                                                                                                               tap)
+                                                                                                               args.tap)
 
     # do STA
-    folder_name = "sta_tap{}".format(tap)
+    folder_name = "{}_tap{}_sta".format(dataset, args.tap)
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
 
