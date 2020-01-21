@@ -48,11 +48,17 @@ def do_sta(spike_triggered_stim_all_channels, spike_count_all_channels=None, inf
 
 
         if folder_name is not None:
+            # plot spatial pattern
             if info is not None:
                 pysta.plot_stim_slices(sta, 8, 8, dt=1000/info["sampling_rate"])
             else:
                 pysta.plot_stim_slices(sta, 8, 8)
             plt.savefig("{}/{}_sta.png".format(folder_name, channel_name))
+            plt.close()
+
+            # plot temporal pattern
+            plt.plot(sta)
+            plt.savefig("{}/{}_sta_temp.png".format(folder_name, channel_name))
             plt.close()
 
     # put results into a DataFrame
