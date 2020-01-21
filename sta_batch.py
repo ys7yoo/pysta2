@@ -23,6 +23,7 @@ def do_sta(spike_triggered_stim_all_channels, spike_count_all_channels=None, inf
         #print(channel_name)
 
         num_samples.append(spike_triggered_stim_all_channels[ch_idx].shape[0])
+        tap = spike_triggered_stim_all_channels[ch_idx].shape[-1]
 
         if spike_count_all_channels is None:
             # print("perform simple mean")
@@ -48,16 +49,21 @@ def do_sta(spike_triggered_stim_all_channels, spike_count_all_channels=None, inf
 
 
         if folder_name is not None:
+            dt=1000/info["sampling_rate"]
             # plot spatial pattern
             if info is not None:
-                pysta.plot_stim_slices(sta, 8, 8, dt=1000/info["sampling_rate"])
+                pysta.plot_stim_slices(sta, 8, 8, dt=dt)
             else:
                 pysta.plot_stim_slices(sta, 8, 8)
             plt.savefig("{}/{}_sta.png".format(folder_name, channel_name))
             plt.close()
 
             # plot temporal pattern
-            plt.plot(sta.T)
+            grid_T = np.linspace(-tap+1,0,tap)*dt
+            plt.plot(grid_T, sta.T)
+            plt.ylabel("stimulus")
+            plt.xlabel("time to spike (ms)")
+            plt.ylim([0.2, 0.8])
             plt.savefig("{}/{}_sta_temp.png".format(folder_name, channel_name))
             plt.close()
 
