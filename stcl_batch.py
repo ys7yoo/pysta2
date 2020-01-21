@@ -37,10 +37,6 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
     for ch_idx in tqdm(range(num_channels)):
         channel_name = info["channel_names"][ch_idx]
         cell_type = info["cell_types"][ch_idx]
-
-        if cell_type in ["unknown", "ON", "OFF"]:
-            continue
-
         print(channel_name, cell_type)
 
         # grab spike-triggered stim
