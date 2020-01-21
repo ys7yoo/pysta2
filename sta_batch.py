@@ -57,7 +57,7 @@ def do_sta(spike_triggered_stim_all_channels, spike_count_all_channels=None, inf
             plt.close()
 
             # plot temporal pattern
-            plt.plot(sta)
+            plt.plot(sta.T)
             plt.savefig("{}/{}_sta_temp.png".format(folder_name, channel_name))
             plt.close()
 
