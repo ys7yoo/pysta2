@@ -219,6 +219,21 @@ def plot_stim_slices(stim, width=8, height=8, vmin=0.2, vmax=0.8, dt=None):
                 plt.title("{:.0f} ms".format(-dt*(T-t-1)))
 
 
+def plot_histogram_by_cell_type(df, col_name, alpha=0.5):
+    idx_on = df["cell_type"] == "ON"
+    df.loc[idx_on, col_name].hist(alpha=alpha)
+
+    idx_on = df["cell_type"] == "OFF"
+    df.loc[idx_on, col_name].hist(alpha=alpha)
+
+    idx_unknown = df["cell_type"] == "unknown"
+    df.loc[idx_unknown, col_name].hist(alpha=alpha)
+
+    plt.xlabel(col_name)
+    plt.ylabel("count")
+    plt.legend(["ON", "OFF", "unknown"])
+
+
 from scipy.ndimage import gaussian_filter
 
 
