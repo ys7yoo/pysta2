@@ -234,6 +234,39 @@ def plot_histogram_by_cell_type(df, col_name, alpha=0.5):
     plt.legend(["ON", "OFF", "unknown"])
 
 
+# find significantly higher or lower voxels in STA
+def find_significant_voxels(sta):
+    m = np.mean(sta.ravel())
+    sig = np.std(sta.ravel())
+
+    voxel_high = ((sta - m) > 2.58 * sig).astype(int)
+    voxel_low = ((sta - m) < -2.58 * sig).astype(int)
+
+    return voxel_high, voxel_low
+
+
+def count_significant_voxels(sta):
+    voxel_high, voxel_low = find_significant_voxels(sta)
+
+    return np.sum(voxel_high.ravel()), np.sum(voxel_low.ravel())
+
+
+# find significantly higher or lower voxels in STA slice
+def find_significant_pixels(sta, time_bin):
+    m = np.mean(sta.ravel())
+    sig = np.std(sta.ravel())
+
+    pixel_high = ((sta[:, time_bin]) > 2.58 * sig).astype(int)
+    pixel_low = ((sta[:, time_bin]) < -2.58 * sig).astype(int)
+
+    return pixel_high, pixel_low
+
+
+def count_significant_pixels(sta, time_bin):
+    pixel_high, pixel_low = find_significant_pixels(sta, time_bin)
+    return np.sum(pixel_high), np.sum(pixel_low)
+
+
 from scipy.ndimage import gaussian_filter
 
 
