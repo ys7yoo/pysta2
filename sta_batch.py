@@ -122,6 +122,8 @@ if __name__ == '__main__':
 
     # grab spike-triggered stim
     spike_triggered_stim_all_channels, spike_count_all_channels = pysta.grab_spike_triggered_stim_all_channels(stim,
+                                                                                                               spike_train,
+                                                                                                               args.tap)
 
     # do STA
     folder_name = "{}_tap{}_sta".format(dataset, args.tap)
