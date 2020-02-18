@@ -199,10 +199,12 @@ def plot_stim_slices(stim, width=8, height=8, vmin=0.2, vmax=0.8, dt=None):
 
     T = stim.shape[2]
 
+    axes = list()
+
     if T > 7:
         plt.figure(figsize=(8, 4))
         for t in range(T):
-            plt.subplot(2, T / 2, t + 1)
+            axes.append(plt.subplot(2, T / 2, t + 1))
             plt.imshow(stim[:, :, t], cmap='gray', vmin=vmin, vmax=vmax, origin='lower')
             plt.axis('off')
 
@@ -211,18 +213,19 @@ def plot_stim_slices(stim, width=8, height=8, vmin=0.2, vmax=0.8, dt=None):
     else:
         plt.figure(figsize=(8, 3))
         for t in range(T):
-            plt.subplot(1, T, t + 1)
+            axes.append(plt.subplot(1, T, t + 1))
             plt.imshow(stim[:, :, t], cmap='gray', vmin=vmin, vmax=vmax, origin='lower')
             plt.axis('off')
 
             if dt is not None:
                 plt.title("{:.0f} ms".format(-dt*(T-t-1)))
 
+    return axes
 
 def plot_ellipse(avg, covariance, LINE_TYPE='r--'):
 
     if np.max(covariance.ravel())==0 and np.min(covariance.ravel())==0: # single pixel
-        plt.plot(avg[:,0], avg[:,1], 'o'+LINE_TYPE)
+        plt.plot(avg[0], avg[1], 'o'+LINE_TYPE)
         return
 
     theta = np.linspace(0, 2*np.pi, 100).ravel()
@@ -296,9 +299,11 @@ def calc_mean_and_cov(X, weight):
 
     m = np.average(X, weights=weight, axis=0)
 
-    C = np.cov(X, rowvar=False, aweights=weight)
-    #np.cov(X, rowvar=False, aweights=weight, ddof=0)
-
+    if X.shape[0] > 1: 
+        C = np.cov(X, rowvar=False, aweights=weight)
+        #np.cov(X, rowvar=False, aweights=weight, ddof=0)
+    else: # single pixel
+        C = np.zeros((X.shape[1],X.shape[1]))
     return m, C
 
 # # test code
@@ -334,6 +339,49 @@ def calc_center_and_cov(weight, mask):
     weight = weight[idx]
 
     return calc_mean_and_cov(XY, weight / np.sum(weight))
+
+
+# put into one function
+def plot_RF(sta, time_bin, shape, plot_sta_slice=True):
+    #subtract mean
+    sta_mean = np.mean(sta.ravel())
+
+    if plot_sta_slice:
+        plt.imshow(sta[:,time_bin].reshape(shape), cmap='gray', origin='lower')
+
+    # find significant pixels
+    pixel_high, pixel_low = find_significant_pixels(sta, time_bin, shape)
+
+    num_pixel_high = np.sum(pixel_high.ravel())
+    num_pixel_low = np.sum(pixel_low.ravel())
+    # print(num_pixel_high, num_pixel_low)
+
+    if num_pixel_high == 0 and num_pixel_low ==0: # no significant pixel
+        return None
+
+    # find center and cov of RFs
+    if num_pixel_high > 0:
+        high_center, high_cov = calc_center_and_cov(sta[:,time_bin]-sta_mean, pixel_high)
+    else:
+        high_center = None
+
+    if num_pixel_low > 0:
+        low_center, low_cov = calc_center_and_cov(sta[:,time_bin]-sta_mean, pixel_low)
+    else:
+        low_center = None
+
+    # plot as ellipse
+    if high_center is not None:
+        plot_ellipse(high_center, high_cov, 'r--')
+
+        RF = {"type": "ON", "center": high_center, "cov": high_cov}
+
+    if low_center is not None:
+        plot_ellipse(low_center, low_cov, 'b--')
+
+        RF = {"type": "OFF", "center": low_center, "cov": low_cov}
+
+    return RF
 
 
 from scipy.ndimage import gaussian_filter
