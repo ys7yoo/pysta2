@@ -256,8 +256,8 @@ def find_significant_pixels(sta, time_bin):
     m = np.mean(sta.ravel())
     sig = np.std(sta.ravel())
 
-    pixel_high = ((sta[:, time_bin]) > 2.58 * sig).astype(int)
-    pixel_low = ((sta[:, time_bin]) < -2.58 * sig).astype(int)
+    pixel_high = ((sta[:, time_bin] - m) > 2.58 * sig).astype(int)
+    pixel_low = ((sta[:, time_bin] - m) < -2.58 * sig).astype(int)
 
     return pixel_high, pixel_low
 
