@@ -219,6 +219,24 @@ def plot_stim_slices(stim, width=8, height=8, vmin=0.2, vmax=0.8, dt=None):
                 plt.title("{:.0f} ms".format(-dt*(T-t-1)))
 
 
+def plot_RF(avg, covariance, LINE_TYPE='r--'):
+
+    if np.max(covariance.ravel())==0 and np.min(covariance.ravel())==0: # single pixel
+        plt.plot(avg[:,0], avg[:,1], 'o'+LINE_TYPE)
+        return
+
+    theta = np.linspace(0, 2*np.pi, 100).ravel()
+
+    circ = np.column_stack([np.cos(theta), np.sin(theta)])
+
+    eps = 1e-9
+    L = np.linalg.cholesky(covariance+np.diag([eps, eps]))
+    ellipse = avg + circ @ L.T @ np.diag([2.4477, 2.4477])
+
+    plt.plot(ellipse[:,0], ellipse[:,1], LINE_TYPE)
+    return
+
+
 def plot_histogram_by_cell_type(df, col_name, alpha=0.5):
     idx_on = df["cell_type"] == "ON"
     df.loc[idx_on, col_name].hist(alpha=alpha)
