@@ -199,10 +199,12 @@ def plot_stim_slices(stim, width=8, height=8, vmin=0.2, vmax=0.8, dt=None):
 
     T = stim.shape[2]
 
+    axes = list()
+
     if T > 7:
         plt.figure(figsize=(8, 4))
         for t in range(T):
-            plt.subplot(2, T / 2, t + 1)
+            axes.append(plt.subplot(2, T / 2, t + 1))
             plt.imshow(stim[:, :, t], cmap='gray', vmin=vmin, vmax=vmax, origin='lower')
             plt.axis('off')
 
@@ -211,12 +213,175 @@ def plot_stim_slices(stim, width=8, height=8, vmin=0.2, vmax=0.8, dt=None):
     else:
         plt.figure(figsize=(8, 3))
         for t in range(T):
-            plt.subplot(1, T, t + 1)
+            axes.append(plt.subplot(1, T, t + 1))
             plt.imshow(stim[:, :, t], cmap='gray', vmin=vmin, vmax=vmax, origin='lower')
             plt.axis('off')
 
             if dt is not None:
                 plt.title("{:.0f} ms".format(-dt*(T-t-1)))
+
+    return axes
+
+def plot_ellipse(avg, covariance, LINE_TYPE='r--'):
+
+    if np.max(covariance.ravel())==0 and np.min(covariance.ravel())==0: # single pixel
+        plt.plot(avg[0], avg[1], 'o'+LINE_TYPE)
+        return
+
+    theta = np.linspace(0, 2*np.pi, 100).ravel()
+
+    circ = np.column_stack([np.cos(theta), np.sin(theta)])
+
+    eps = 1e-9
+    L = np.linalg.cholesky(covariance+np.diag([eps, eps]))
+    ellipse = avg + circ @ L.T @ np.diag([2.4477, 2.4477])
+
+    plt.plot(ellipse[:,0], ellipse[:,1], LINE_TYPE)
+    return
+
+
+def plot_histogram_by_cell_type(df, col_name, alpha=0.5):
+    idx_on = df["cell_type"] == "ON"
+    df.loc[idx_on, col_name].hist(alpha=alpha)
+
+    idx_on = df["cell_type"] == "OFF"
+    df.loc[idx_on, col_name].hist(alpha=alpha)
+
+    idx_unknown = df["cell_type"] == "unknown"
+    df.loc[idx_unknown, col_name].hist(alpha=alpha)
+
+    plt.xlabel(col_name)
+    plt.ylabel("count")
+    plt.legend(["ON", "OFF", "unknown"])
+
+
+# find significantly higher or lower voxels in STA
+def find_significant_voxels(sta):
+    m = np.mean(sta.ravel())
+    sig = np.std(sta.ravel())
+
+    voxel_high = ((sta - m) > 2.58 * sig).astype(int)
+    voxel_low = ((sta - m) < -2.58 * sig).astype(int)
+
+    return voxel_high, voxel_low
+
+
+def count_significant_voxels(sta):
+    voxel_high, voxel_low = find_significant_voxels(sta)
+
+    return np.sum(voxel_high.ravel()), np.sum(voxel_low.ravel())
+
+
+# find significantly higher or lower voxels in STA slice
+def find_significant_pixels(sta, time_bin, target_shape=None):
+    m = np.mean(sta.ravel())
+    sig = np.std(sta.ravel())
+
+    pixel_high = ((sta[:, time_bin] - m) > 2.58 * sig).astype(int)
+    pixel_low = ((sta[:, time_bin] - m) < -2.58 * sig).astype(int)
+
+    if target_shape is not None:
+        pixel_high = pixel_high.reshape(target_shape)
+        pixel_low = pixel_low.reshape(target_shape)
+
+
+    return pixel_high, pixel_low
+
+
+def count_significant_pixels(sta, time_bin):
+    pixel_high, pixel_low = find_significant_pixels(sta, time_bin)
+    return np.sum(pixel_high), np.sum(pixel_low)
+
+
+# helper functions for quantifying RF
+# find weighted center of significant pixels
+def calc_mean_and_cov(X, weight):
+
+    m = np.average(X, weights=weight, axis=0)
+
+    if X.shape[0] > 1: 
+        C = np.cov(X, rowvar=False, aweights=weight)
+        #np.cov(X, rowvar=False, aweights=weight, ddof=0)
+    else: # single pixel
+        C = np.zeros((X.shape[1],X.shape[1]))
+    return m, C
+
+# # test code
+# X = np.array([[1], [2], [3], [4]])
+# weight = np.array([0.15, 0.35, 0.25, 0.25])
+# print(X.shape)
+# print(weight.shape)
+
+# print(calc_mean_and_cov(X, weight))
+
+# print(np.cov(X, rowvar=False))
+# print(np.cov(X, rowvar=False, ddof=0))
+# print(np.cov(X, rowvar=False, aweights=weight))
+# print(np.cov(X, rowvar=False, aweights=weight, ddof=0))
+
+
+def calc_center_and_cov(weight, mask):
+
+    height, width = mask.shape
+
+    x = np.linspace(0, width-1, width)
+    y = np.linspace(0, height-1, height)
+    xx, yy = np.meshgrid(x, y)
+
+    XY = np.column_stack([xx.ravel(), yy.ravel()])
+    weight = weight.ravel()
+
+    # choose rows with non-zero mask
+    if np.sum(mask.ravel()) == 0:
+        return None, None
+    idx = mask.ravel() > 0
+    XY = XY[idx,:]
+    weight = weight[idx]
+
+    return calc_mean_and_cov(XY, weight / np.sum(weight))
+
+
+# put into one function
+def plot_RF(sta, time_bin, shape, plot_sta_slice=True):
+    #subtract mean
+    sta_mean = np.mean(sta.ravel())
+
+    if plot_sta_slice:
+        plt.imshow(sta[:,time_bin].reshape(shape), cmap='gray', origin='lower')
+
+    # find significant pixels
+    pixel_high, pixel_low = find_significant_pixels(sta, time_bin, shape)
+
+    num_pixel_high = np.sum(pixel_high.ravel())
+    num_pixel_low = np.sum(pixel_low.ravel())
+    # print(num_pixel_high, num_pixel_low)
+
+    if num_pixel_high == 0 and num_pixel_low ==0: # no significant pixel
+        return None
+
+    # find center and cov of RFs
+    if num_pixel_high > 0:
+        high_center, high_cov = calc_center_and_cov(sta[:,time_bin]-sta_mean, pixel_high)
+    else:
+        high_center = None
+
+    if num_pixel_low > 0:
+        low_center, low_cov = calc_center_and_cov(sta[:,time_bin]-sta_mean, pixel_low)
+    else:
+        low_center = None
+
+    # plot as ellipse
+    if high_center is not None:
+        plot_ellipse(high_center, high_cov, 'r--')
+
+        RF = {"type": "ON", "center": high_center, "cov": high_cov}
+
+    if low_center is not None:
+        plot_ellipse(low_center, low_cov, 'b--')
+
+        RF = {"type": "OFF", "center": low_center, "cov": low_cov}
+
+    return RF
 
 
 from scipy.ndimage import gaussian_filter
@@ -258,7 +423,7 @@ def smoothe_stim(spike_triggered_stim, sig):
 from scipy.stats import multivariate_normal
 
 
-def plot_ellipse(width, height, mean, sig, color='r', ax=None):
+def plot_ellipse_contour(width, height, mean, sig, color='r', ax=None):
 
     def pdf_standard_norm(z, dim=1):
         if dim == 1:
@@ -266,7 +431,7 @@ def plot_ellipse(width, height, mean, sig, color='r', ax=None):
         elif dim == 2:
             return np.exp(-z ** 2) / (2 * np.pi)
 
-    xx, yy = np.mgrid[0:width:.1, 0:height:.1]
+    xx, yy = np.mgrid[0:width-1:.1, 0:height-1:.1]
     pos = np.dstack((xx, yy))
     rv = multivariate_normal(mean, sig)
 

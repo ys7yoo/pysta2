@@ -13,8 +13,10 @@ def do_sta(spike_triggered_stim_all_channels, spike_count_all_channels=None, inf
     num_samples = list()
     num_spikes = list()
     sigs = list()
-    mins = list()
-    maxs = list()
+    min_values = list()
+    min_time_bins = list()
+    max_values = list()
+    max_time_bins = list()
 
 
     for ch_idx in tqdm(range(len(spike_triggered_stim_all_channels))):
@@ -34,9 +36,15 @@ def do_sta(spike_triggered_stim_all_channels, spike_count_all_channels=None, inf
             sta = np.average(spike_triggered_stim_all_channels[ch_idx], weights=spike_count_all_channels[ch_idx], axis=0)
             num_spikes.append(np.sum(spike_count_all_channels[ch_idx]))
 
-        # calc min and max of sta
-        mins.append(np.min(sta.ravel()))
-        maxs.append(np.max(sta.ravel()))
+        # first, find max/min of each time bin
+        mm = np.max(sta, axis=0)
+        max_values.append(np.max(mm))
+        max_time_bins.append(np.argmax(mm))
+
+        mm = np.min(sta, axis=0)
+        min_values.append(np.min(mm))
+        min_time_bins.append(np.argmin(mm))
+
 
         # calc std of sta
         # m = np.mean(sta.reshape([-1, 1]))
@@ -68,14 +76,16 @@ def do_sta(spike_triggered_stim_all_channels, spike_count_all_channels=None, inf
             plt.close()
 
     # put results into a DataFrame
-    sta_result = pd.DataFrame({"channel_name": channel_names,
+    sta_stat = pd.DataFrame({"channel_name": channel_names,
                                "num_samples": num_samples,
                                "num_spikes": num_spikes,
-                               "min": mins,
-                               "max": maxs,
+                               "max": max_values,
+                               "max_time_bin": max_time_bins,
+                               "min": min_values,
+                               "min_time_bin": min_time_bins,
                                "sigma": sigs})
 
-    return sta_result
+    return sta_stat
 
     # if folder_name is not None:
     #     sigs = np.array(sigs)
@@ -120,7 +130,7 @@ if __name__ == '__main__':
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
 
-    sta_result = do_sta(spike_triggered_stim_all_channels, spike_count_all_channels, info, folder_name) # weighted average
+    sta_stat = do_sta(spike_triggered_stim_all_channels, spike_count_all_channels, info, folder_name) # weighted average
     # sta_result = do_sta(spike_triggered_stim_all_channels)  # simple mean
-    sta_result.to_csv(os.path.join(folder_name, "stat.csv"), index=None)
+    sta_stat.to_csv(os.path.join(folder_name, "stat.csv"), index=None)
 
