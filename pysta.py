@@ -91,10 +91,16 @@ def load_data_mat(filename):
         print('length of the list channel_names: ', len(channel_names))
         info["channel_names"] = channel_names
 
+        # remove "ch_" from info["channel_names"]
+        channel_names = [ch.replace("ch_", "") for ch in info["channel_names"]]
+        info["channel_names"] = channel_names
+
         sampling_rate = hf.get('sampling_rate')[0][0]
         print('sampling_rate: ', sampling_rate)
         info["sampling_rate"] = sampling_rate
-    
+
+
+
     return stim, spike_train, info
 
 
@@ -105,7 +111,7 @@ def load_cell_type(dataset_name, folder_name=""):
 
 
 def load_data(dataset_name, folder_name=""):
-    with np.load(os.path.join(folder_name,dataset_name)+".npz", allow_pickle=True) as data:
+    with np.load(os.path.join(folder_name, dataset_name)+".npz", allow_pickle=True) as data:
         print(data.files)
         stim = data["stim"]
         spike_train = data["spike_train"]
@@ -121,10 +127,12 @@ def load_data(dataset_name, folder_name=""):
     channel_names_df = pd.DataFrame({"channel_name": channel_names})
     cell_types_df = load_cell_type(dataset_name, folder_name)
 
-    merged_df = channel_names_df.merge(cell_types_df, on="channel_name", how="outer")
-    merged_df.fillna('unknown', inplace=True)
+    merged_df = channel_names_df.merge(cell_types_df, on="channel_name")    # must match!
+    #merged_df = channel_names_df.merge(cell_types_df, on="channel_name", how="outer")
+    # merged_df.fillna('unknown', inplace=True)
 
     info["cell_types"] = list(merged_df["cell_type"])
+    assert len(info["cell_types"]) == spike_train.shape[0]
 
     print(info)
 
