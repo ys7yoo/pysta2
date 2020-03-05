@@ -467,3 +467,20 @@ def calc_rotation_matrix(source_point, target_point=np.array((-1, 0))):
     #     np.dot(source_point,Rt)
 
     return R
+
+
+# plot histogram with the order that I WANT
+# https://stackoverflow.com/questions/28418988/how-to-make-a-histogram-from-a-list-of-strings-in-python
+def plot_hist(data, types=["ON", "OFF", "unknown"], width=0.3):
+    from collections import Counter
+    type_counts = Counter(data)
+
+    type_counts = [type_counts[type] for type in types]
+    # print(type_counts)
+
+    plt.bar(types, type_counts, width=width)
+    # plt.ylim(0,25)
+    plt.ylabel('count')
+    # plt.xlabel('cell type')
+
+    return type_counts
