@@ -107,7 +107,7 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
         # plot group_center
         dt = 100
         grid_T = np.linspace(-tap + 1, 0, tap) * dt
-        stcl.plot_centers(weighted_center, group_center, grid_T, cl.weights_)
+        stcl.plot_centers(weighted_center, group_center, grid_T, cl.weights_, [PSNR0, PSNR1])
         plt.savefig(os.path.join(folder_name, "{}_d{}_centers.png".format(channel_name, cluster_dim)))
         plt.close()
 

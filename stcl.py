@@ -36,7 +36,7 @@ def calc_centers(spike_triggered_stim_row, spike_count, pred):
     return centers
 
 
-def plot_centers(center, group_center, grid_T, weights=None, vmin=0, vmax=1):
+def plot_centers(center, group_center, grid_T, weights=None, PSNRs=None, vmin=0, vmax=1):
     num_centers = len(group_center)
     plt.figure(figsize=(6*num_centers,5))
 
@@ -45,15 +45,19 @@ def plot_centers(center, group_center, grid_T, weights=None, vmin=0, vmax=1):
     # plot center
     ax = plt.subplot(1, num_centers+1, 1)
     plt.plot(grid_T, center.reshape([8 * 8, -1]).T, 'k', alpha=0.3)
+    plt.title("sta")
     ax.set_ylim(vmin, vmax)
 
 
     for i in range(num_centers):
-        ax=plt.subplot(1,num_centers+1,i+2)
+        ax=plt.subplot(1, num_centers+1, i+2)
         plt.plot(grid_T, group_center[i].reshape([8 * 8, -1]).T, colors[i], alpha=0.3)
-        ax.set_ylim(vmin,vmax)
-        if weights is None:
-            plt.title("average stim group {}".format(i+1))
-        else:
-            plt.title("average stim group {} (weight={:.2f})".format(i + 1,weights[i]))
+        ax.set_ylim(vmin, vmax)
+
+        title_string = "group {}".format(i+1)
+        if weights is not None:
+            title_string = title_string +  ",weight={:.2f}".format(weights[i])
+        if PSNRs is not None:
+            title_string = title_string + ",PSNR={:.2f}".format(PSNRs[i])
+        plt.title(title_string)
 
