@@ -39,7 +39,7 @@ def calc_centers(spike_triggered_stim_row, spike_count, pred):
 
 def plot_centers(center, group_center, grid_T, weights=None, sta_PSNR=None, PSNRs=None, vmin=0, vmax=1):
     num_centers = len(group_center)
-    plt.figure(figsize=(6*num_centers,5))
+    plt.figure(figsize=(6*num_centers,4))
 
     colors = ['b','r','g']
 
@@ -64,6 +64,6 @@ def plot_centers(center, group_center, grid_T, weights=None, sta_PSNR=None, PSNR
         if weights is not None:
             title_string = title_string + ",weight={:.2f}".format(weights[i])
         if PSNRs is not None:
-            title_string = title_string + ",PSNR={:.2f}".format(PSNRs[i])
+            title_string = title_string + ",PSNR={:.1f}".format(PSNRs[i])
         plt.title(title_string)
 
