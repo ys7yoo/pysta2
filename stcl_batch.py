@@ -32,6 +32,8 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
     weight0 = list()
     weight1 = list()
     group_center_inner_product = list()
+    group_center_PSNR0 = list()
+    group_center_PSNR1 = list()
 
     print("Doing STC...")
     for ch_idx in tqdm(range(num_channels)):
@@ -90,15 +92,19 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
         # calc inner product of two centers
         inner_product = np.dot(group_center[0].ravel()-center.ravel(), group_center[1].ravel()-center.ravel())
 
+        # calc PSNRs for the two centers
+        PSNR0 = pysta.calc_PSNR(group_center[0])
+        PSNR1 = pysta.calc_PSNR(group_center[1])
 
         # save clustering results to lists
         channel_names.append(channel_name)
         weight0.append(cl.weights_[0])
         weight1.append(cl.weights_[1])
         group_center_inner_product.append(inner_product)
+        group_center_PSNR0.append(PSNR0)
+        group_center_PSNR1.append(PSNR1)
 
         # plot group_center
-
         dt = 100
         grid_T = np.linspace(-tap + 1, 0, tap) * dt
         stcl.plot_centers(weighted_center, group_center, grid_T, cl.weights_)
@@ -114,7 +120,7 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
         plt.close()
 
     # save channel names and weights
-    pd.DataFrame({"channel_name": channel_names, "weight1": weight0, "weight2": weight1, "inner_product": group_center_inner_product}).to_csv(os.path.join(folder_name, "clusters.csv"), index=None)
+    pd.DataFrame({"channel_name": channel_names, "weight1": weight0, "weight2": weight1, "inner_product": group_center_inner_product, "PSNR0": group_center_PSNR0, "PSNR1":group_center_PSNR1}).to_csv(os.path.join(folder_name, "clusters.csv"), index=None)
 
 
 ###############################################################################

@@ -301,6 +301,13 @@ def count_significant_pixels(sta, time_bin):
     return np.sum(pixel_high), np.sum(pixel_low)
 
 
+def calc_PSNR(stim):
+    stim_max = np.max(stim.ravel())
+    stim_min = np.min(stim.ravel())
+    stim_std = np.std(stim.ravel())
+
+    return (stim_max-stim_min) / stim_std
+
 # helper functions for quantifying RF
 # find weighted center of significant pixels
 def calc_mean_and_cov(X, weight):
