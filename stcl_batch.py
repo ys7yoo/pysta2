@@ -29,6 +29,7 @@ def centering(data, weights=None):
 def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algorithm="classic",  cluster_dim=1, save_folder_name="stc"):
 
     channel_names = list()
+    sta_PSNR = list()
     weight0 = list()
     weight1 = list()
     group_center_inner_product = list()
@@ -87,7 +88,8 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
         pred = cl.predict(projected[:, :dim])
 
         group_center = stcl.calc_centers(data_row, spike_count, pred)
-        weighted_center = np.average(data_row, weights=spike_count, axis=0)  # to compare
+        sta = np.average(data_row, weights=spike_count, axis=0)  # to compare
+        PSNR = pysta.calc_PSNR(sta)
 
         # calc inner product of two centers
         inner_product = np.dot(group_center[0].ravel()-center.ravel(), group_center[1].ravel()-center.ravel())
@@ -98,6 +100,7 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
 
         # save clustering results to lists
         channel_names.append(channel_name)
+        sta_PSNR.append(PSNR)
         weight0.append(cl.weights_[0])
         weight1.append(cl.weights_[1])
         group_center_inner_product.append(inner_product)
@@ -107,7 +110,7 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
         # plot group_center
         dt = 100
         grid_T = np.linspace(-tap + 1, 0, tap) * dt
-        stcl.plot_centers(weighted_center, group_center, grid_T, cl.weights_, [PSNR0, PSNR1])
+        stcl.plot_centers(sta, group_center, grid_T, cl.weights_, PSNR, [PSNR0, PSNR1])
         plt.savefig(os.path.join(folder_name, "{}_d{}_centers.png".format(channel_name, cluster_dim)))
         plt.close()
 
@@ -120,7 +123,7 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
         plt.close()
 
     # save channel names and weights
-    pd.DataFrame({"channel_name": channel_names, "weight1": weight0, "weight2": weight1, "inner_product": group_center_inner_product, "PSNR0": group_center_PSNR0, "PSNR1":group_center_PSNR1}).to_csv(os.path.join(folder_name, "clusters.csv"), index=None)
+    pd.DataFrame({"channel_name": channel_names, "sta_PSNR": sta_PSNR, "weight1": weight0, "weight2": weight1, "inner_product": group_center_inner_product, "PSNR0": group_center_PSNR0, "PSNR1":group_center_PSNR1}).to_csv(os.path.join(folder_name, "clusters.csv"), index=None)
 
 
 ###############################################################################

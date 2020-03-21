@@ -37,7 +37,7 @@ def calc_centers(spike_triggered_stim_row, spike_count, pred):
     return centers
 
 
-def plot_centers(center, group_center, grid_T, weights=None, PSNRs=None, vmin=0, vmax=1):
+def plot_centers(center, group_center, grid_T, weights=None, sta_PSNR=None, PSNRs=None, vmin=0, vmax=1):
     num_centers = len(group_center)
     plt.figure(figsize=(6*num_centers,5))
 
@@ -47,8 +47,11 @@ def plot_centers(center, group_center, grid_T, weights=None, PSNRs=None, vmin=0,
     ax = plt.subplot(1, num_centers+1, 1)
     plt.plot(grid_T, center.reshape([8 * 8, -1]).T, 'k', alpha=0.3)
 
-    PSNR = pysta.calc_PSNR(center)
-    plt.title("STA, PSNR={:.2f}".format(PSNR))
+    # PSNR = pysta.calc_PSNR(center)
+    if sta_PSNR is None:
+        plt.title("STA")
+    else:
+        plt.title("STA, PSNR={:.2f}".format(sta_PSNR))
     ax.set_ylim(vmin, vmax)
 
 
