@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 # fit mixture of Gaussians
 from sklearn.mixture import GaussianMixture
 
+import pysta
 
 def fit(feature, initial_pred=None):
 
@@ -45,7 +46,9 @@ def plot_centers(center, group_center, grid_T, weights=None, PSNRs=None, vmin=0,
     # plot center
     ax = plt.subplot(1, num_centers+1, 1)
     plt.plot(grid_T, center.reshape([8 * 8, -1]).T, 'k', alpha=0.3)
-    plt.title("sta")
+
+    PSNR = pysta.calc_PSNR(center)
+    plt.title("sta, PSNR={:.2f}".format(PSNR))
     ax.set_ylim(vmin, vmax)
 
 
@@ -56,7 +59,7 @@ def plot_centers(center, group_center, grid_T, weights=None, PSNRs=None, vmin=0,
 
         title_string = "group {}".format(i+1)
         if weights is not None:
-            title_string = title_string +  ",weight={:.2f}".format(weights[i])
+            title_string = title_string + ",weight={:.2f}".format(weights[i])
         if PSNRs is not None:
             title_string = title_string + ",PSNR={:.2f}".format(PSNRs[i])
         plt.title(title_string)
