@@ -123,7 +123,7 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
         plt.close()
 
     # save channel names and weights
-    pd.DataFrame({"channel_name": channel_names, "sta_PSNR": sta_PSNR, "weight1": weight0, "weight2": weight1, "inner_product": group_center_inner_product, "PSNR0": group_center_PSNR0, "PSNR1":group_center_PSNR1}).to_csv(os.path.join(folder_name, "clusters.csv"), index=None)
+    pd.DataFrame({"channel_name": channel_names, "sta_PSNR": sta_PSNR, "weight1": weight0, "weight2": weight1, "inner_product": group_center_inner_product, "PSNR1": group_center_PSNR0, "PSNR2":group_center_PSNR1}).to_csv(os.path.join(folder_name, "clusters.csv"), index=None)
 
 
 ###############################################################################
