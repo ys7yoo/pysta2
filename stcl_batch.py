@@ -101,17 +101,20 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
         # save clustering results to lists
         channel_names.append(channel_name)
         sta_PSNR.append(PSNR)
+
+        group_center_PSNR0.append(PSNR0)
+        group_center_PSNR1.append(PSNR1)
         weight0.append(cl.weights_[0])
         weight1.append(cl.weights_[1])
         group_center_inner_product.append(inner_product)
-        group_center_PSNR0.append(PSNR0)
-        group_center_PSNR1.append(PSNR1)
+
 
         # plot group_center
         dt = 100
         grid_T = np.linspace(-tap + 1, 0, tap) * dt
         stcl.plot_centers(sta, group_center, grid_T, cl.weights_, PSNR, [PSNR0, PSNR1])
         plt.savefig(os.path.join(folder_name, "{}_d{}_centers.png".format(channel_name, cluster_dim)))
+        plt.savefig(os.path.join(folder_name, "{}_d{}_centers.pdf".format(channel_name, cluster_dim)))
         plt.close()
 
         pysta.plot_stim_slices(group_center[0], dt=dt)
@@ -123,7 +126,11 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
         plt.close()
 
     # save channel names and weights
-    pd.DataFrame({"channel_name": channel_names, "sta_PSNR": sta_PSNR, "weight1": weight0, "weight2": weight1, "inner_product": group_center_inner_product, "PSNR1": group_center_PSNR0, "PSNR2":group_center_PSNR1}).to_csv(os.path.join(folder_name, "clusters.csv"), index=None)
+    pd.DataFrame({"channel_name": channel_names,
+                  "PSNR": sta_PSNR,
+                  "PSNR1": group_center_PSNR0, "PSNR2": group_center_PSNR1,
+                  "weight1": weight0, "weight2": weight1,
+                  "inner_product": group_center_inner_product}).to_csv(os.path.join(folder_name, "clusters.csv"), index=None)
 
 
 ###############################################################################
