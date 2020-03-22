@@ -29,6 +29,7 @@ def centering(data, weights=None):
 def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algorithm="classic",  cluster_dim=1, save_folder_name="stc"):
 
     channel_names = list()
+    num_spikes = list()
     sta_PSNR = list()
 
     largest_eigen_values = list()
@@ -110,6 +111,8 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
 
         # save clustering results to lists
         channel_names.append(channel_name)
+        num_spikes.append(spike_count)
+
         sta = np.average(data_row, weights=spike_count, axis=0)  # to compare
         PSNR = pysta.calc_PSNR(sta)
         sta_PSNR.append(PSNR)
@@ -138,6 +141,7 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
 
     # save channel names and weights
     pd.DataFrame({"channel_name": channel_names,
+                  "num_spikes": num_spikes,
                   "cell_type": info["cell_types"],
                   # STA
                   "PSNR": sta_PSNR,
