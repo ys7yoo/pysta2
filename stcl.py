@@ -19,10 +19,10 @@ def fit(feature, initial_pred=None):
     gm = GaussianMixture(n_components=2, n_init=20, means_init=means_init)
     gm.fit(feature)
 
-    print("converged=", gm.converged_)
-    print("means=", gm.means_)
-    print("covariances=", gm.covariances_)
-    print("weights=", gm.weights_)
+    # print("converged=", gm.converged_)
+    # print("means=", gm.means_)
+    # print("covariances=", gm.covariances_)
+    # print("weights=", gm.weights_)
 
     return gm
 

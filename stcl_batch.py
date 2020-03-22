@@ -30,6 +30,7 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
 
     channel_names = list()
     sta_PSNR = list()
+    converged = list()
     weight0 = list()
     weight1 = list()
     group_center_inner_product = list()
@@ -37,10 +38,11 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
     group_center_PSNR1 = list()
 
     print("Doing STC...")
+    num_channels = spike_train.shape[0]
     for ch_idx in tqdm(range(num_channels)):
         channel_name = info["channel_names"][ch_idx]
         cell_type = info["cell_types"][ch_idx]
-        print(channel_name, cell_type)
+        # print(channel_name, cell_type)
 
         # grab spike-triggered stim
         spike_triggered_stim, spike_count = pysta.grab_spike_triggered_stim(stim, spike_train[ch_idx, :], tap)
@@ -83,9 +85,9 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
 
         #######################################################################
         # now do clustering
-        cl = stcl.fit(projected[:, :dim])
-
-        pred = cl.predict(projected[:, :dim])
+        cl = stcl.fit(projected[:, :cluster_dim])
+        converged.append(cl.converged_)
+        pred = cl.predict(projected[:, :cluster_dim])
 
         group_center = stcl.calc_centers(data_row, spike_count, pred)
         sta = np.average(data_row, weights=spike_count, axis=0)  # to compare
@@ -128,6 +130,7 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
     # save channel names and weights
     pd.DataFrame({"channel_name": channel_names,
                   "PSNR": sta_PSNR,
+                  "converged": converged,
                   "PSNR1": group_center_PSNR0, "PSNR2": group_center_PSNR1,
                   "weight1": weight0, "weight2": weight1,
                   "inner_product": group_center_inner_product}).to_csv(os.path.join(folder_name, "clusters.csv"), index=None)
@@ -206,7 +209,7 @@ if __name__ == '__main__':
     parser.add_argument("-t", "--tap", type=int, default=8, help="number of taps")
     parser.add_argument("-c", "--cov_algorithm", default="classic", choices=["classic", "robust"], help="algorithm for calculating covariance")
     # clustering param
-    parser.add_argument("-d", "--dim", type=int, default=1, help="dimension used for clustering")
+    parser.add_argument("-d", "--dim", type=int, default=2, help="dimension used for clustering")
 
 
     # read arguments from the command line
@@ -226,7 +229,6 @@ if __name__ == '__main__':
     # load stim and spike data
     folder_name = "data"
     stim, spike_train, info = pysta.load_data(dataset, folder_name)
-    num_channels = spike_train.shape[0]
 
     if args.sigma > 0:
         str_smooth = "sigma{:.3f}_".format(args.sigma)
