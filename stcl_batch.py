@@ -30,6 +30,11 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
 
     channel_names = list()
     sta_PSNR = list()
+
+    largest_eigen_values = list()
+    second_largest_eigen_values = list()
+    third_largest_eigen_values = list()
+
     converged = list()
     weight0 = list()
     weight1 = list()
@@ -41,7 +46,7 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
     num_channels = spike_train.shape[0]
     for ch_idx in tqdm(range(num_channels)):
         channel_name = info["channel_names"][ch_idx]
-        cell_type = info["cell_types"][ch_idx]
+        # cell_type = info["cell_types"][ch_idx]
         # print(channel_name, cell_type)
 
         # grab spike-triggered stim
@@ -69,6 +74,11 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
 
         # do STC
         eig_values, eig_vectors = stc.do_stc(data_centered, weights, cov_algorithm)
+
+        largest_eigen_values.append(eig_values[0])
+        second_largest_eigen_values.append(eig_values[1])
+        third_largest_eigen_values.append(eig_values[2])
+
         # np.savetxt("{}/{}_eig_val.txt".format(save_folder_name, channel_name), eig_values)
         # np.savez_compressed("{}/{}_eig_vec.npz".format(folder_name, channel_name), eig_vectors)
 
@@ -128,7 +138,12 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
 
     # save channel names and weights
     pd.DataFrame({"channel_name": channel_names,
+                  "cell_type": info["cell_types"],
+                  # STA
                   "PSNR": sta_PSNR,
+                  # STC
+                  "eig1": largest_eigen_values, "eig2": second_largest_eigen_values, "eig3": third_largest_eigen_values,
+                  # clustering
                   "converged": converged,
                   "PSNR1": group_center_PSNR0, "PSNR2": group_center_PSNR1,
                   "weight1": weight0, "weight2": weight1,
