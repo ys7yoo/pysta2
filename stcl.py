@@ -37,7 +37,7 @@ def calc_centers(spike_triggered_stim_row, spike_count, pred):
     else: # sometimes, only one group survives
         i = pred[0]
         centers.append(np.average(spike_triggered_stim_row[pred == i, :], axis=0, weights=spike_count[pred == i]))
-        centers.append(np.nan)
+        # centers.append(np.nan)
 
     return centers
 
