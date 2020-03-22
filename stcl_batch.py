@@ -92,10 +92,7 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
         group_center = stcl.calc_centers(data_row, spike_count, pred)
 
         # calc inner product of two centers
-        if len(group_center) == 2:
-            inner_product = np.dot(group_center[0].ravel()-center.ravel(), group_center[1].ravel()-center.ravel())
-        else:
-            inner_product = np.nan
+        inner_product = np.dot(group_center[0].ravel()-center.ravel(), group_center[1].ravel()-center.ravel())
 
         # calc PSNRs for the two centers
         PSNR0 = pysta.calc_PSNR(group_center[0])
