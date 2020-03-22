@@ -90,11 +90,12 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
         pred = cl.predict(projected[:, :cluster_dim])
 
         group_center = stcl.calc_centers(data_row, spike_count, pred)
-        sta = np.average(data_row, weights=spike_count, axis=0)  # to compare
-        PSNR = pysta.calc_PSNR(sta)
 
         # calc inner product of two centers
-        inner_product = np.dot(group_center[0].ravel()-center.ravel(), group_center[1].ravel()-center.ravel())
+        if len(group_center) == 2:
+            inner_product = np.dot(group_center[0].ravel()-center.ravel(), group_center[1].ravel()-center.ravel())
+        else:
+            inner_product = np.nan
 
         # calc PSNRs for the two centers
         PSNR0 = pysta.calc_PSNR(group_center[0])
@@ -102,6 +103,8 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
 
         # save clustering results to lists
         channel_names.append(channel_name)
+        sta = np.average(data_row, weights=spike_count, axis=0)  # to compare
+        PSNR = pysta.calc_PSNR(sta)
         sta_PSNR.append(PSNR)
 
         group_center_PSNR0.append(PSNR0)
@@ -109,7 +112,6 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
         weight0.append(cl.weights_[0])
         weight1.append(cl.weights_[1])
         group_center_inner_product.append(inner_product)
-
 
         # plot group_center
         dt = 100
