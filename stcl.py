@@ -31,8 +31,13 @@ def calc_centers(spike_triggered_stim_row, spike_count, pred):
     num_labels = len(set(pred))
     centers = list()
 
-    for i in range(num_labels):
-        centers.append(np.average(spike_triggered_stim_row[pred==i,:], axis=0, weights=spike_count[pred==i]))
+    if num_labels > 1:
+        for i in range(num_labels):
+            centers.append(np.average(spike_triggered_stim_row[pred == i, :], axis=0, weights=spike_count[pred == i]))
+    else: # sometimes, only one group survives
+        i = pred[0]
+        centers.append(np.average(spike_triggered_stim_row[pred == i, :], axis=0, weights=spike_count[pred == i]))
+        centers.append(np.nan)
 
     return centers
 
