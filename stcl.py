@@ -28,15 +28,21 @@ def fit(feature, initial_pred=None):
 
 
 def calc_centers(spike_triggered_stim_row, spike_count, pred):
-    num_labels = len(set(pred))
+    # num_labels = len(set(pred))
     centers = list()
 
-    if num_labels > 1:
-        for i in range(num_labels):
-            centers.append(np.average(spike_triggered_stim_row[pred == i, :], axis=0, weights=spike_count[pred == i]))
-    else: # sometimes, only one group survives
-        i = pred[0]
-        centers.append(np.average(spike_triggered_stim_row[pred == i, :], axis=0, weights=spike_count[pred == i]))
+    # if num_labels > 1:
+    for i in range(2):
+        idx = pred == i
+        if any(idx):
+            centers.append(np.average(spike_triggered_stim_row[idx, :], axis=0, weights=spike_count[idx]))
+        else:
+            print("nothing for group {}".format(i))
+            centers.append(np.nan*np.zeros((spike_triggered_stim_row.shape[1])))
+    # else: # sometimes, only one group survives
+        # centers = None
+        # i = pred[0]
+        # centers.append(np.average(spike_triggered_stim_row[pred == i, :], axis=0, weights=spike_count[pred == i]))
         # centers.append(np.nan)
 
     return centers
