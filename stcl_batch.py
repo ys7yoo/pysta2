@@ -111,7 +111,7 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
 
         # save clustering results to lists
         channel_names.append(channel_name)
-        num_spikes.append(spike_count)
+        num_spikes.append(np.sum(spike_count))
 
         sta = np.average(data_row, weights=spike_count, axis=0)  # to compare
         PSNR = pysta.calc_PSNR(sta)
