@@ -127,16 +127,16 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
         dt = 100
         grid_T = np.linspace(-tap + 1, 0, tap) * dt
         stcl.plot_centers(sta, group_center, grid_T, cl.weights_, PSNR, [PSNR0, PSNR1])
-        plt.savefig(os.path.join(folder_name, "{}_d{}_centers.png".format(channel_name, cluster_dim)))
-        plt.savefig(os.path.join(folder_name, "{}_d{}_centers.pdf".format(channel_name, cluster_dim)))
+        plt.savefig(os.path.join(folder_name, "{}_centers.png".format(channel_name)))
+        plt.savefig(os.path.join(folder_name, "{}_centers.pdf".format(channel_name)))
         plt.close()
 
         pysta.plot_stim_slices(group_center[0], dt=dt)
-        plt.savefig(os.path.join(folder_name, "{}_d{}_center_1.png".format(channel_name, cluster_dim)))
+        plt.savefig(os.path.join(folder_name, "{}_center_1.png".format(channel_name)))
         plt.close()
 
         pysta.plot_stim_slices(group_center[1], dt=dt)
-        plt.savefig(os.path.join(folder_name, "{}_d{}_center_2.png".format(channel_name, cluster_dim)))
+        plt.savefig(os.path.join(folder_name, "{}_center_2.png".format(channel_name)))
         plt.close()
 
     # save channel names and weights
