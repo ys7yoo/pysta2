@@ -263,6 +263,21 @@ def plot_histogram_by_cell_type(df, col_name, alpha=0.5):
     plt.legend(["ON", "OFF", "unknown"])
 
 
+def plot_scatter_by_cell_type(df, col_names, alpha=0.5):
+    idx_on = df["cell_type"] == "ON"
+    df.loc[idx_on, col_name].hist(alpha=alpha)
+
+    idx_on = df["cell_type"] == "OFF"
+    df.loc[idx_on, col_name].hist(alpha=alpha)
+
+    idx_unknown = df["cell_type"] == "unknown"
+    df.loc[idx_unknown, col_name].hist(alpha=alpha)
+
+    plt.xlabel(col_name)
+    plt.ylabel("count")
+    plt.legend(["ON", "OFF", "unknown"])
+
+
 # find significantly higher or lower voxels in STA
 def find_significant_voxels(sta):
     m = np.mean(sta.ravel())
