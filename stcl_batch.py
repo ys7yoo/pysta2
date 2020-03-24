@@ -26,7 +26,7 @@ def centering(data, weights=None):
 ###############################################################################
 # STC + Clustering
 ###############################################################################
-def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algorithm="classic",  cluster_dim=1, save_folder_name="stc"):
+def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algorithm="classic",  cluster_dim=1, save_folder_name="clustering"):
 
     channel_names = list()
     num_spikes = list()
@@ -43,7 +43,8 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
     group_center_PSNR0 = list()
     group_center_PSNR1 = list()
 
-    print("Doing STC...")
+    print("Doing clustering...")
+    print("Results are saved to {}".format(folder_name))
     num_channels = spike_train.shape[0]
     for ch_idx in tqdm(range(num_channels)):
         channel_name = info["channel_names"][ch_idx]
