@@ -101,14 +101,14 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
         converged.append(cl.converged_)
         pred = cl.predict(projected[:, :cluster_dim])
 
-        group_center = stcl.calc_centers(data_row, spike_count, pred)
+        group_centers = stcl.calc_centers(data_row, spike_count, pred)
 
         # calc inner product of two centers
-        inner_product = np.dot(group_center[0].ravel()-center.ravel(), group_center[1].ravel()-center.ravel())
+        inner_product = np.dot(group_centers[0].ravel()-center.ravel(), group_centers[1].ravel()-center.ravel())
 
         # calc PSNRs for the two centers
-        PSNR0 = pysta.calc_PSNR(group_center[0])
-        PSNR1 = pysta.calc_PSNR(group_center[1])
+        PSNR0 = pysta.calc_PSNR(group_centers[0])
+        PSNR1 = pysta.calc_PSNR(group_centers[1])
 
         # save clustering results to lists
         channel_names.append(channel_name)
@@ -124,21 +124,24 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
         weight1.append(cl.weights_[1])
         group_center_inner_product.append(inner_product)
 
-        # plot group_center
+        # plot group_centers
         dt = 100
         grid_T = np.linspace(-tap + 1, 0, tap) * dt
-        stcl.plot_centers(sta, group_center, grid_T, cl.weights_, PSNR, [PSNR0, PSNR1])
+        stcl.plot_centers(sta, group_centers, grid_T, cl.weights_, PSNR, [PSNR0, PSNR1])
         plt.savefig(os.path.join(folder_name, "{}_centers.png".format(channel_name)))
         plt.savefig(os.path.join(folder_name, "{}_centers.pdf".format(channel_name)))
         plt.close()
 
-        pysta.plot_stim_slices(group_center[0], dt=dt)
+        pysta.plot_stim_slices(group_centers[0], dt=dt)
         plt.savefig(os.path.join(folder_name, "{}_center_1.png".format(channel_name)))
         plt.close()
 
-        pysta.plot_stim_slices(group_center[1], dt=dt)
+        pysta.plot_stim_slices(group_centers[1], dt=dt)
         plt.savefig(os.path.join(folder_name, "{}_center_2.png".format(channel_name)))
         plt.close()
+
+        # save STA and group centers
+        np.savez_compressed(os.path.join(folder_name, "{}.npz".format(channel_name)), sta=sta, group_centers=group_centers)
 
     # save channel names and weights
     pd.DataFrame({"channel_name": channel_names,
