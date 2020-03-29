@@ -248,6 +248,30 @@ def plot_ellipse(avg, covariance, LINE_TYPE='r--'):
     return
 
 
+def plot_hist_by_group(df, column, group, group_order=None, color=None):
+    # based on
+    # https://stackoverflow.com/a/19589675
+    # https://stackoverflow.com/a/39481709
+
+    # read each group and store it to a dict
+    groupby = dict()
+    for group in df.groupby(group):
+        groupby[group[0]] = group[1][column]
+
+    if group_order is None:
+        group_order = groupby.keys()
+
+    values = []
+    for g in group_order:
+        values.append(groupby[g])
+
+    plt.hist(values, density=True, label=group_order, color=color)
+    plt.legend(loc='upper right')
+    #     plt.legend(legend)
+    plt.xlabel(column)
+    plt.ylabel("frequency")
+
+
 def plot_histogram_by_cell_type(df, col_name, alpha=0.5):
     idx_on = df["cell_type"] == "ON"
     df.loc[idx_on, col_name].hist(alpha=alpha)
@@ -263,18 +287,21 @@ def plot_histogram_by_cell_type(df, col_name, alpha=0.5):
     plt.legend(["ON", "OFF", "unknown"])
 
 
-def plot_scatter_by_cell_type(df, col_names, alpha=0.5):
-    idx_on = df["cell_type"] == "ON"
-    df.loc[idx_on, col_name].hist(alpha=alpha)
+def plot_scatter_by_cell_type(df, col_names, types=["ON", "OFF", "unknown"], alpha=0.5):
+    for type in types:
+        idx = df["cell_type"] == type
+        plt.scatter(df.loc[idx,col_names[0]], df.loc[idx,col_names[1]], alpha=alpha)
 
-    idx_on = df["cell_type"] == "OFF"
-    df.loc[idx_on, col_name].hist(alpha=alpha)
+    # idx = df["cell_type"] == "OFF"
+    # plt.scatter(df.loc[idx, col_names[0]], df.loc[idx, col_names[1]], alpha=alpha)
+    # # df.loc[idx].plot.scatter(col_names[0], col_names[1], alpha=alpha)
+    #
+    # idx = df["cell_type"] == "unknown"
+    # plt.scatter(df.loc[idx, col_names[0]], df.loc[idx, col_names[1]], alpha=alpha)
+    # # df.loc[idx].plot.scatter(col_names[0], col_names[1], alpha=alpha)
 
-    idx_unknown = df["cell_type"] == "unknown"
-    df.loc[idx_unknown, col_name].hist(alpha=alpha)
-
-    plt.xlabel(col_name)
-    plt.ylabel("count")
+    plt.xlabel(col_names[0])
+    plt.ylabel(col_names[1])
     plt.legend(["ON", "OFF", "unknown"])
 
 
