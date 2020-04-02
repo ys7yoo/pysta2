@@ -202,6 +202,21 @@ def plot_on_MEA(channel_names, values, perturbation_size=0.25, xticks=None, ytic
         plt.yticks(yticks)
 
 
+def calc_grid_T(tap, dt):
+    grid_T = np.linspace(-tap + 1, 0, tap) * dt
+
+    return grid_T
+
+
+def plot_temporal_profile(sta, tap, dt):
+    # calc time to spike
+    grid_T = calc_grid_T(tap, dt)
+
+    # not plot
+    plt.plot(grid_T, sta.reshape([-1, tap]).T)
+    plt.xlabel('time to spike (ms)')
+
+
 def plot_stim_slices(stim, width=8, height=8, vmin=0.2, vmax=0.8, dt=None):
     stim = stim.reshape([height, width, -1])
 
