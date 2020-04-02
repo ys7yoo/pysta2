@@ -248,7 +248,7 @@ def plot_ellipse(avg, covariance, LINE_TYPE='r--'):
     return
 
 
-def plot_hist_by_group(df, column, group, group_order=None, color=None):
+def plot_hist_by_group(df, column, group, group_order=None, color=None, bins=None, density=False):
     # based on
     # https://stackoverflow.com/a/19589675
     # https://stackoverflow.com/a/39481709
@@ -265,11 +265,22 @@ def plot_hist_by_group(df, column, group, group_order=None, color=None):
     for g in group_order:
         values.append(groupby[g])
 
-    plt.hist(values, density=True, label=group_order, color=color)
+    plt.hist(values, label=group_order, color=color, bins=bins, density=density)
     plt.legend(loc='upper right')
     #     plt.legend(legend)
     plt.xlabel(column)
-    plt.ylabel("frequency")
+
+    if density:
+        plt.ylabel("frequency")
+    else:
+        plt.ylabel("count")
+
+
+def plot_hist_by_cell_type(df, col_name, bins=None, density=None):
+    if len(df["cell_type"].value_counts()) == 3:
+        plot_hist_by_group(df, col_name, "cell_type", ["ON", "OFF", "unknown"], color=["r", "b", "k"], bins=bins, density=density)
+    else:
+        plot_hist_by_group(df, col_name, "cell_type", ["ON", "OFF", "ON/OF", "unknown"], color=["r", "b", "g", "k"], bins=bins, density=density)
 
 
 def plot_histogram_by_cell_type(df, col_name, alpha=0.5):
@@ -287,10 +298,10 @@ def plot_histogram_by_cell_type(df, col_name, alpha=0.5):
     plt.legend(["ON", "OFF", "unknown"])
 
 
-def plot_scatter_by_cell_type(df, col_names, types=["ON", "OFF", "unknown"], alpha=0.5):
-    for type in types:
+def plot_scatter_by_cell_type(df, col_names, types=["ON", "OFF", "unknown"], colors=["r","b","k"], alpha=0.5):
+    for i, type in enumerate(types):
         idx = df["cell_type"] == type
-        plt.scatter(df.loc[idx,col_names[0]], df.loc[idx,col_names[1]], alpha=alpha)
+        plt.scatter(df.loc[idx,col_names[0]], df.loc[idx,col_names[1]], alpha=alpha, c=colors[i])
 
     # idx = df["cell_type"] == "OFF"
     # plt.scatter(df.loc[idx, col_names[0]], df.loc[idx, col_names[1]], alpha=alpha)
