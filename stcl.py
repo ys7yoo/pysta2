@@ -50,20 +50,112 @@ def calc_centers(spike_triggered_stim_row, spike_count, pred):
     return centers
 
 
-def plot_temporal_profiles(sta, group_centers, tap, dt, vmin=0, vmax=1):
+def plot_temporal_profiles(sta, group_centers, tap, dt, vmin=0, vmax=1, titles=None):
     plt.figure(figsize=(15, 4))
 
     ax = plt.subplot(131)
     pysta.plot_temporal_profile(sta, tap, dt)
     ax.set_ylim(vmin, vmax)
+    if titles is not None:
+        plt.title(titles[0])
 
     ax = plt.subplot(132)
     pysta.plot_temporal_profile(group_centers[0], tap, dt)
     ax.set_ylim(vmin, vmax)
+    if titles is not None:
+        plt.title(titles[1])
 
     ax = plt.subplot(133)
     pysta.plot_temporal_profile(group_centers[1], tap, dt)
     ax.set_ylim(vmin, vmax)
+    if titles is not None:
+        plt.title(titles[2])
+
+
+def plot_an_example(series, cluster_dim, tap=8, dt=100, temporal_profile=True, spatial_profile=False,
+                    folder_name=None, file_name_prefix=""):
+    if folder_name is not None:
+        if not os.path.exists(folder_name):
+            os.makedirs(folder_name)
+
+    dataset_name = series["dataset"]
+    channel_name = series["channel_name"]
+    cell_type = series["cell_type"]
+    inner_product = series["inner_product"]
+
+    PSNR = series["PSNR"]
+    PSNR1 = series["PSNR1"]
+    PSNR2 = series["PSNR2"]
+
+    prob0 = series["cell_type_prob0"]
+    prob1 = series["cell_type_prob1"]
+    prob2 = series["cell_type_prob2"]
+
+    #     print(i, dataset_name, channel_name, cell_type, inner_product, PSNR1, PSNR2)
+
+    centers = np.load(os.path.join("{}_tap8_cov_classic_cluster_dim{}".format(dataset_name, cluster_dim), channel_name) + ".npz")
+
+    sta = centers['sta']
+    group_centers = centers['group_centers']
+
+
+    if temporal_profile:
+        plt.figure(figsize=(20, 8))
+
+        if prob1 > prob2:
+            titles = ["sta (PSNR={:.1f}, prob={:.2f})".format(PSNR, prob0),
+                      "1 (PSNR={:.1f}, prob={:.2f})".format(PSNR1, prob1),
+                      "2 (PSNR={:.1f}, prob={:.2f})".format(PSNR2, prob2)]
+
+            plot_temporal_profiles(sta, group_centers, tap, dt, titles=titles)
+        else:
+            titles = ["STA (PSNR={:.1f}, prob={:.2f})".format(PSNR, prob0),
+                      "ON (PSNR={:.1f}, prob={:.2f})".format(PSNR2, prob2),
+                      "OFF (PSNR={:.1f}, prob={:.2f})".format(PSNR1, prob1)]
+            plot_temporal_profiles(sta, [group_centers[1], group_centers[0]], tap, dt, titles=titles)
+
+        if folder_name is not None:
+            plt.savefig(os.path.join(folder_name, file_name_prefix + "{}_{}.png".format(dataset_name, channel_name)))
+
+    # plot spatial profile
+    if spatial_profile:
+        plt.figure(figsize=(20, 8))
+        pysta.plot_stim_slices(sta)
+
+        if folder_name is not None:
+            plt.savefig(os.path.join(folder_name,
+                                     file_name_prefix + "{}_{}_sta.png".format(dataset_name, channel_name)))
+
+        if prob1 > prob2:
+            group_idx = [0, 1]
+        else:
+            group_idx = [1, 0]
+
+        for idx in group_idx:
+            plt.figure(figsize=(20, 8))
+            pysta.plot_stim_slices(group_centers[idx])
+
+            if folder_name is not None:
+                plt.savefig(os.path.join(folder_name,
+                                         file_name_prefix + "{}_{}_center{}.png".format(dataset_name, channel_name,
+                                                                                  idx)))
+
+
+def plot_examples(cluster_sorted, cluster_dim, temporal_profile=True, spatial_profile=False, folder_name=None,
+                  file_name_prefix=None):
+
+    if folder_name is not None:
+        if not os.path.exists(folder_name):
+            os.makedirs(folder_name)
+
+    for i in range(len(cluster_sorted)):
+        if folder_name is not None:
+            file_name_prefix = "{:02d}_".format(i)
+
+        plot_an_example(cluster_sorted.iloc[i], cluster_dim,
+                        temporal_profile=temporal_profile,
+                        spatial_profile=spatial_profile,
+                        folder_name=folder_name, file_name_prefix=file_name_prefix)
 
 
 def plot_centers(center, group_center, grid_T, weights=None, sta_PSNR=None, PSNRs=None, vmin=0, vmax=1):
