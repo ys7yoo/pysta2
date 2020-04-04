@@ -263,7 +263,7 @@ def plot_ellipse(avg, covariance, LINE_TYPE='r--'):
     return
 
 
-def plot_hist_by_group(df, column, group, group_order=None, color=None, bins=None, density=False):
+def plot_hist_by_group(df, column, group, group_order=None, group_color=None, bins=None, density=False):
     # based on
     # https://stackoverflow.com/a/19589675
     # https://stackoverflow.com/a/39481709
@@ -280,7 +280,7 @@ def plot_hist_by_group(df, column, group, group_order=None, color=None, bins=Non
     for g in group_order:
         values.append(groupby[g])
 
-    plt.hist(values, label=group_order, color=color, bins=bins, density=density)
+    plt.hist(values, label=group_order, color=group_color, bins=bins, density=density)
     plt.legend(loc='upper right')
     #     plt.legend(legend)
     plt.xlabel(column)
@@ -293,9 +293,9 @@ def plot_hist_by_group(df, column, group, group_order=None, color=None, bins=Non
 
 def plot_hist_by_cell_type(df, col_name, bins=None, density=None):
     if len(df["cell_type"].value_counts()) == 3:
-        plot_hist_by_group(df, col_name, "cell_type", ["ON", "OFF", "unknown"], color=["r", "b", "k"], bins=bins, density=density)
+        plot_hist_by_group(df, col_name, "cell_type", ["ON", "OFF", "unknown"], group_color=["r", "b", "k"], bins=bins, density=density)
     else:
-        plot_hist_by_group(df, col_name, "cell_type", ["ON", "OFF", "ON/OF", "unknown"], color=["r", "b", "g", "k"], bins=bins, density=density)
+        plot_hist_by_group(df, col_name, "cell_type", ["ON", "OFF", "ON/OF", "unknown"], group_color=["r", "b", "g", "k"], bins=bins, density=density)
 
 
 def plot_histogram_by_cell_type(df, col_name, alpha=0.5):
@@ -313,22 +313,20 @@ def plot_histogram_by_cell_type(df, col_name, alpha=0.5):
     plt.legend(["ON", "OFF", "unknown"])
 
 
-def plot_scatter_by_cell_type(df, col_names, types=["ON", "OFF", "unknown"], colors=["r","b","k"], alpha=0.5):
-    for i, type in enumerate(types):
-        idx = df["cell_type"] == type
-        plt.scatter(df.loc[idx,col_names[0]], df.loc[idx,col_names[1]], alpha=alpha, c=colors[i])
-
-    # idx = df["cell_type"] == "OFF"
-    # plt.scatter(df.loc[idx, col_names[0]], df.loc[idx, col_names[1]], alpha=alpha)
-    # # df.loc[idx].plot.scatter(col_names[0], col_names[1], alpha=alpha)
-    #
-    # idx = df["cell_type"] == "unknown"
-    # plt.scatter(df.loc[idx, col_names[0]], df.loc[idx, col_names[1]], alpha=alpha)
-    # # df.loc[idx].plot.scatter(col_names[0], col_names[1], alpha=alpha)
+def plot_scatter_by_group(df, col_names,
+                          group_key="cell_type",
+                          group_values=["ON", "OFF", "unknown"],
+                          group_colors=["r","b","k"],
+                          alpha=0.5,
+                          loc = "lower left"):
+    for i, type in enumerate(group_values):
+        idx = df[group_key] == type
+        plt.scatter(df.loc[idx,col_names[0]], df.loc[idx,col_names[1]],
+                    c=group_colors[i], alpha=alpha)
 
     plt.xlabel(col_names[0])
     plt.ylabel(col_names[1])
-    plt.legend(["ON", "OFF", "unknown"])
+    plt.legend(group_values, loc=loc)
 
 
 # find significantly higher or lower voxels in STA
