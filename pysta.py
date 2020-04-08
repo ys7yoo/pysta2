@@ -295,7 +295,7 @@ def plot_hist_by_cell_type(df, col_name, bins=None, density=None):
     if len(df["cell_type"].value_counts()) == 3:
         plot_hist_by_group(df, col_name, "cell_type", ["ON", "OFF", "unknown"], group_color=["r", "b", "k"], bins=bins, density=density)
     else:
-        plot_hist_by_group(df, col_name, "cell_type", ["ON", "OFF", "ON/OF", "unknown"], group_color=["r", "b", "g", "k"], bins=bins, density=density)
+        plot_hist_by_group(df, col_name, "cell_type", ["ON", "OFF", "ON/OFF", "unknown"], group_color=["r", "b", "g", "k"], bins=bins, density=density)
 
 
 def plot_histogram_by_cell_type(df, col_name, alpha=0.5):
