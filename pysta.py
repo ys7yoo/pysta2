@@ -318,16 +318,21 @@ def plot_scatter_by_group(df, col_names,
                           group_values=["ON", "OFF", "unknown"],
                           group_colors=["r","b","k"],
                           alpha=0.5,
-                          loc = "lower left"):
+                          loc=None):
+    title = ""
     for i, type in enumerate(group_values):
         idx = df[group_key] == type
         plt.scatter(df.loc[idx,col_names[0]], df.loc[idx,col_names[1]],
                     c=group_colors[i], alpha=alpha)
 
+        title += type + ":{}, ".format(np.sum(idx))
+    title = title[:-2] # remove the last comma
+
     plt.xlabel(col_names[0])
     plt.ylabel(col_names[1])
     plt.legend(group_values, loc=loc)
 
+    plt.title(title)
 
 # find significantly higher or lower voxels in STA
 def find_significant_voxels(sta):
