@@ -160,32 +160,49 @@ def plot_examples(cluster_sorted, cluster_dim, temporal_profile=True, spatial_pr
 
 def plot_centers(center, group_center, grid_T, weights=None, sta_PSNR=None, PSNRs=None, vmin=0, vmax=1):
     num_centers = len(group_center)
-    plt.figure(figsize=(5*(num_centers+1),4))
+    plt.figure(figsize=(5.5*(num_centers+1),4))
 
     colors = ['b','r','g']
 
     # plot center
     ax = plt.subplot(1, num_centers+1, 1)
     plt.plot(grid_T, center.reshape([8 * 8, -1]).T, 'k', alpha=0.3)
+    plt.xlabel('time to spike (ms)')
+    plt.ylabel('STA')
+
+    # remove top & right box
+    # https://stackoverflow.com/a/28720127
+    # ax = plt.gca()
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
 
     # PSNR = pysta.calc_PSNR(center)
-    if sta_PSNR is None:
-        plt.title("STA")
-    else:
-        plt.title("STA, PSNR={:.2f}".format(sta_PSNR))
+    if sta_PSNR is not None:
+        plt.title("PSNR={:.2f}".format(sta_PSNR))
     ax.set_ylim(vmin, vmax)
 
 
     for i in range(num_centers):
         ax=plt.subplot(1, num_centers+1, i+2)
         plt.plot(grid_T, group_center[i].reshape([8 * 8, -1]).T, colors[i], alpha=0.3)
+        plt.xlabel('time to spike (ms)')
+        plt.ylabel("cluster {} center".format(i+1))
+
+        # remove top & right box
+        # https://stackoverflow.com/a/28720127
+        # ax = plt.gca()
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+
         ax.set_ylim(vmin, vmax)
 
-        title_string = "group {}".format(i+1)
-        if weights is not None:
-            title_string = title_string + ",weight={:.2f}".format(weights[i])
+        # title_string = "group {}".format(i+1)
+        title_string = ""
         if PSNRs is not None:
-            title_string = title_string + ",PSNR={:.1f}".format(PSNRs[i])
+            title_string = title_string + "PSNR={:.1f}".format(PSNRs[i])
+        if weights is not None:
+            title_string = title_string + ", weight={:.2f}".format(weights[i])
+
         plt.title(title_string)
 
 
