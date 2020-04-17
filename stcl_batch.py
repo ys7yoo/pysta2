@@ -44,7 +44,7 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
     group_center_PSNR1 = list()
 
     print("Doing clustering...")
-    print("Results are saved to {}".format(folder_name))
+    print("Results are saved to {}".format(save_folder_name))
     num_channels = spike_train.shape[0]
     for ch_idx in tqdm(range(num_channels)):
         channel_name = info["channel_names"][ch_idx]
@@ -128,20 +128,20 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
         dt = 100
         grid_T = np.linspace(-tap + 1, 0, tap) * dt
         stcl.plot_centers(sta, group_centers, grid_T, cl.weights_, PSNR, [PSNR0, PSNR1])
-        plt.savefig(os.path.join(folder_name, "{}_centers.png".format(channel_name)))
-        plt.savefig(os.path.join(folder_name, "{}_centers.pdf".format(channel_name)))
+        plt.savefig(os.path.join(save_folder_name, "{}_centers.png".format(channel_name)))
+        plt.savefig(os.path.join(save_folder_name, "{}_centers.pdf".format(channel_name)))
         plt.close()
 
         pysta.plot_stim_slices(group_centers[0], dt=dt)
-        plt.savefig(os.path.join(folder_name, "{}_center_1.png".format(channel_name)))
+        plt.savefig(os.path.join(save_folder_name, "{}_center_1.png".format(channel_name)))
         plt.close()
 
         pysta.plot_stim_slices(group_centers[1], dt=dt)
-        plt.savefig(os.path.join(folder_name, "{}_center_2.png".format(channel_name)))
+        plt.savefig(os.path.join(save_folder_name, "{}_center_2.png".format(channel_name)))
         plt.close()
 
         # save STA and group centers
-        np.savez_compressed(os.path.join(folder_name, "{}.npz".format(channel_name)), sta=sta, group_centers=group_centers)
+        np.savez_compressed(os.path.join(save_folder_name, "{}.npz".format(channel_name)), sta=sta, group_centers=group_centers)
 
     # save channel names and weights
     pd.DataFrame({"channel_name": channel_names,
@@ -155,7 +155,7 @@ def run_stcl(stim, spike_train, info, spatial_smoothing_sigma=0, tap=8, cov_algo
                   "converged": converged,
                   "PSNR1": group_center_PSNR0, "PSNR2": group_center_PSNR1,
                   "weight1": weight0, "weight2": weight1,
-                  "inner_product": group_center_inner_product}).to_csv(os.path.join(folder_name, "clusters.csv"), index=None)
+                  "inner_product": group_center_inner_product}).to_csv(os.path.join(save_folder_name, "clusters.csv"), index=None)
 
 
 ###############################################################################
@@ -249,15 +249,15 @@ if __name__ == '__main__':
     # load data
     print("loading data...")
     # load stim and spike data
-    folder_name = "data"
-    stim, spike_train, info = pysta.load_data(dataset, folder_name)
+    data_folder_name = "data"
+    stim, spike_train, info = pysta.load_data(dataset, data_folder_name)
 
     if args.sigma > 0:
         str_smooth = "sigma{:.3f}_".format(args.sigma)
     else:
         str_smooth = ""
-    folder_name = "{}_{}tap{}_cov_{}_cluster_dim{}".format(dataset, str_smooth, args.tap, args.cov_algorithm, args.dim)
-    if not os.path.exists(folder_name):
-        os.makedirs(folder_name)
+    save_folder_name = "{}_{}tap{}_cov_{}_cluster_dim{}".format(dataset, str_smooth, args.tap, args.cov_algorithm, args.dim)
+    if not os.path.exists(save_folder_name):
+        os.makedirs(save_folder_name)
 
-    run_stcl(stim, spike_train, info, spatial_smoothing_sigma=args.sigma, tap=args.tap, cov_algorithm=args.cov_algorithm, cluster_dim=args.dim, save_folder_name=folder_name)
+    run_stcl(stim, spike_train, info, spatial_smoothing_sigma=args.sigma, tap=args.tap, cov_algorithm=args.cov_algorithm, cluster_dim=args.dim, save_folder_name=save_folder_name)
