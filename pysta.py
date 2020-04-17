@@ -223,7 +223,7 @@ def plot_temporal_profile(sta, tap, dt):
     ax.spines['right'].set_visible(False)
 
 
-def plot_stim_slices(stim, width=8, height=8, vmin=0.2, vmax=0.8, dt=None):
+def plot_stim_slices(stim, width=8, height=8, vmin=0, vmax=1, dt=None):
     stim = stim.reshape([height, width, -1])
 
     T = stim.shape[2]
