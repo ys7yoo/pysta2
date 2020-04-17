@@ -51,7 +51,7 @@ def calc_centers(spike_triggered_stim_row, spike_count, pred):
 
 
 def plot_temporal_profiles(sta, group_centers, tap, dt, vmin=0, vmax=1, titles=None):
-    plt.figure(figsize=(15, 4))
+    plt.figure(figsize=(16, 4))
 
     ax = plt.subplot(131)
     pysta.plot_temporal_profile(sta, tap, dt)

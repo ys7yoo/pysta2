@@ -216,6 +216,12 @@ def plot_temporal_profile(sta, tap, dt):
     plt.plot(grid_T, sta.reshape([-1, tap]).T)
     plt.xlabel('time to spike (ms)')
 
+    # remove top & right box
+    # https://stackoverflow.com/a/28720127
+    ax = plt.gca()
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
 
 def plot_stim_slices(stim, width=8, height=8, vmin=0.2, vmax=0.8, dt=None):
     stim = stim.reshape([height, width, -1])
