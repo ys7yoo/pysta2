@@ -1,5 +1,8 @@
 # pysta
-python code for STA
+python code for spike-triggered analsysis
+* Spike-triggered average (STA)
+* Spike-triggered covariance (STC)
+* Spike-triggered clustering (STCL)
 
 
 # required packages
