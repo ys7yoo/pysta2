@@ -1,4 +1,4 @@
-# pysta
+# pysta2
 python code for spike-triggered analsysis including
 * Spike-triggered average (STA)
 * Spike-triggered covariance (STC)
