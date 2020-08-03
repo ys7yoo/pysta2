@@ -129,7 +129,7 @@ def fit_receptive_field(sta, time_bin, target_shape=None, type='both'):
     return {"type": type, "center": rf_center, "cov": rf_cov, 'num_significant_pixels': num_significant_pixel}
 
 
-def choose_opposite_RFs(RF0, RF1):
+def choose_opposite_RFs(RF0, RF1, ordered=True):
     check0 = [RF0[0] is None, RF0[1] is None]
     check1 = [RF0[1] is None, RF1[1] is None]
 
@@ -145,10 +145,11 @@ def choose_opposite_RFs(RF0, RF1):
         idx1 = 1 - idx0
 
     # order RFs by ON and OFF
-    if RF0[idx0]['type'] == 'ON':
-        return RF0[idx0], RF1[idx1]
-    else:
-        return RF1[idx1], RF0[idx0]
+    if ordered:
+        if RF0[idx0]['type'] == 'ON':
+            return RF0[idx0], RF1[idx1]
+        else:
+            return RF1[idx1], RF0[idx0]
 
 
 # find significantly higher or lower voxels in STA
