@@ -144,7 +144,11 @@ def choose_opposite_RFs(RF0, RF1):
         idx0 = 1 - check0[0]
         idx1 = 1 - idx0
 
-    return RF0[idx0], RF1[idx1]
+    # order RFs by ON and OFF
+    if RF0[idx0]['type'] == 'ON':
+        return RF0[idx0], RF1[idx1]
+    else:
+        return RF1[idx1], RF0[idx0]
 
 
 # find significantly higher or lower voxels in STA
