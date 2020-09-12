@@ -6,16 +6,19 @@ import pandas as pd
 import os
 
 def grab_spike_triggered_stim(stim, spike, tap):
-    
+
     num_time_bin = stim.shape[1]
-    assert(stim.shape[1] == spike.shape[0])    
+    assert(stim.shape[1] == spike.shape[0])
     
     spike_trigered_stim = list()
     spike_count = list()
     for t in range(num_time_bin):
-        if t<tap:
+        if t < tap:
             continue
+        # if t >= stim.shape[1]:
+        #     continue
         sp = spike[t]
+
         if sp > 0:
             #print(t, sp)
             
@@ -73,7 +76,187 @@ def read_mat_cell_2d(hf, key):
         data.append(row_data)
 
     return data
-    
+
+
+def clip_spike_times(spike_times, ts):
+    idx = np.logical_and(spike_times > ts[0], spike_times < ts[-1])
+    return spike_times[idx]
+
+
+def count_spikes(spike_times, bins, timestamp_start=0):
+    num_bins = bins.shape[0]
+    spike_count = np.zeros_like(bins)
+    for i in range(num_bins):
+        if i == 0:
+            continue
+
+        spike_count[i] = np.sum(np.logical_and(spike_times >= timestamp_start + bins[i-1], spike_times < timestamp_start + bins[i]))
+    return spike_count
+
+from tqdm import tqdm
+def load_gaussian_stim_data_mat(data_path, stim_type, contrast):
+    all_bins = list()
+    all_cell_types = list()
+    all_cell_types_by_sta = list()
+    all_set_numbers = list()
+    all_channel_names = list()
+    all_spike_counts = list()
+
+    # read cell types
+    cell_types = pd.read_csv(os.path.join(data_path, 'cell_type.csv'))
+    # cell_types['cell type'].value_counts()
+    # cell_types
+
+    # read stimulus
+    import scipy.io as sio
+    filename = os.path.join(data_path, 'Stimulus/StimInfo_8pix_200um_{}_10Hz_15min_contrast{}'.format(stim_type, contrast))
+    print(filename)
+    stim = list()
+    for stim_info in sio.loadmat(filename)['StimInfo']:
+        stim.append(stim_info[0][0])
+        # print(stim_info[0][0].shape)
+    stim = np.array(stim)
+
+    # read spike counts
+    path = os.path.join(data_path, 'Spike_Timestamp/Contrast_{}'.format(contrast))
+
+    # load time stamps
+    filename = os.path.join(path, 'A1a.mat')
+    print(filename)
+    ts = sio.loadmat(filename)['A1a'].ravel()
+    # print(ts[0], ts[-1], ts.shape)
+
+    # load spike times
+    # channel_names = list()
+    spike_counts = list()
+    for i, channel_name in enumerate(tqdm(cell_types['channel'])):
+        filename = os.path.join(path, channel_name)
+        # print(filename)
+        spike_time = sio.loadmat(filename)[channel_name].ravel()
+
+        # count spikes
+        spike_counts.append(count_spikes(spike_time, ts))
+
+    spike_counts = np.array(spike_counts)
+    # bins, channel_names, spike_counts = load_spike_counts_from_folder(path, interval_in_sec, dt_in_sec)
+
+    # for i, ch in enumerate(channel_names):
+    #     all_set_numbers.append(set_no)
+    #     all_channel_names.append(ch)
+    #
+    #     all_cell_types.append(cell_type)
+    #     all_cell_types_by_sta.append(cell_type)
+    #
+    #     all_bins.append(bins)
+    #     all_spike_counts.append(spike_counts[i])
+
+    # # read experiment info
+    # info = pd.DataFrame({  # 'contrast': contrast,
+    #     'set': all_set_numbers,
+    #     'channel_name': all_channel_names,
+    #     'cell_type': all_cell_types,
+    #     'cell_type_by_sta': all_cell_types_by_sta})
+
+    # bins = bins.reshape((1,-1))
+
+    return stim, spike_counts, cell_types
+
+
+def load_spike_counts_from_folder(path_name):
+    import os
+    from glob import glob
+    import scipy.io as sio
+    # load time stamps
+    filename = os.path.join(path_name, 'A1a.mat')
+    ts = sio.loadmat(filename)['A1a'].ravel()
+
+    # load spike times
+    channel_names = list()
+    spike_counts = list()
+    for filename in glob(os.path.join(path_name, 'ch_*')):
+        # print(filename)
+        basename = os.path.basename(filename).split('.')[0]
+
+        channel_name = basename[3:]
+        channel_names.append(channel_name)
+        #     print(channel_name)
+
+        spike_time = sio.loadmat(filename)[basename].ravel()
+        spike_counts.append(count_spikes(spike_time, ts))
+        # spike_time_clipped = clip_spike_times(spike_time, ts)
+
+        # count spikes
+        # spike_counts.append(count_spikes(spike_time_clipped, bins))
+
+    return channel_names, spike_counts
+
+
+def load_fullfield_data_mat(data_path, contrast):
+    all_cell_types = list()
+    all_cell_types_by_sta = list()
+    all_set_numbers = list()
+    all_channel_names = list()
+    all_spike_counts = list()
+
+    # read stimulus
+    import scipy.io as sio
+    filename = os.path.join(data_path,'Stimulus/StimInfo_Gaussian_Uniform_{}%_5Hz_10min.mat'.format(contrast))
+    stim = sio.loadmat(filename)['StimInfo'].ravel()
+
+
+    # read ON and OFF cells
+    for cell_type in ['ON', 'OFF']:
+        for set_no in [1, 2, 3]:
+            path = os.path.join(data_path, 'Spike_Timestamp/{}/{}%/set{}'.format(cell_type, contrast, set_no))
+            if not os.path.isdir(path):
+                continue
+            if not os.path.isfile(os.path.join(path, 'A1a.mat')):
+                continue
+
+            print(path)
+            channel_names, spike_counts = load_spike_counts_from_folder(path)
+
+            for i, ch in enumerate(channel_names):
+                all_set_numbers.append(set_no)
+                all_channel_names.append(ch)
+
+                all_cell_types.append(cell_type)
+                all_cell_types_by_sta.append(cell_type)
+
+                all_spike_counts.append(spike_counts[i])
+
+    # read ON-OFF cells
+    cell_type = 'ON-OFF'
+    for exp_set in [1, 2, 3]:
+        for cell_type_by_sta in ['ON', 'OFF', 'Unknown']:
+            path = os.path.join(data_path,
+                                'Spike_Timestamp/{}/STA_{}/{}%/set{}'.format(cell_type, cell_type_by_sta, contrast,
+                                                                             exp_set))
+            if not os.path.isdir(path):
+                continue
+            if not os.path.isfile(os.path.join(path, 'A1a.mat')):
+                continue
+
+            print(path)
+            channel_names, spike_counts = load_spike_counts_from_folder(path)
+
+            for i, ch in enumerate(channel_names):
+                all_set_numbers.append(exp_set)
+                all_channel_names.append(ch)
+
+                all_cell_types.append(cell_type)
+                all_cell_types_by_sta.append(cell_type_by_sta)
+
+                all_spike_counts.append(spike_counts[i])
+
+    info = pd.DataFrame({  # 'contrast': contrast,
+        'set': all_set_numbers,
+        'channel_name': all_channel_names,
+        'cell_type': all_cell_types,
+        'cell_type_by_sta': all_cell_types_by_sta})
+
+    return stim, all_spike_counts, info
+
 
 def load_data_mat(filename):
 
@@ -328,8 +511,12 @@ def plot_scatter_by_group(df, col_names,
     title = ""
     for i, type in enumerate(group_values):
         idx = df[group_key] == type
-        plt.scatter(df.loc[idx,col_names[0]], df.loc[idx,col_names[1]],
-                    c=group_colors[i], alpha=alpha)
+        plt.plot(df.loc[idx, col_names[0]], df.loc[idx, col_names[1]],
+                    marker='o', color=group_colors[i], markeredgecolor='None',
+                    linestyle='None',
+                    alpha=alpha, fillstyle='full')
+        # plt.scatter(df.loc[idx,col_names[0]], df.loc[idx,col_names[1]],
+        #             c=group_colors[i], alpha=alpha, edgecolors=None)
 
         title += type + ":{}, ".format(np.sum(idx))
     title = title[:-2] # remove the last comma
