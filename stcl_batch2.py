@@ -28,7 +28,8 @@ def run_stcl(stim, spike_counts, info, tap=8, cluster_dim=2, save_folder_name="c
 
     channel_names = list()
     num_spikes = list()
-    sta_PSNR = list()
+    sta_p2p = list()
+    sta_std = list()
 
     largest_eigen_values = list()
     second_largest_eigen_values = list()
@@ -38,8 +39,10 @@ def run_stcl(stim, spike_counts, info, tap=8, cluster_dim=2, save_folder_name="c
     weight0 = list()
     weight1 = list()
     group_center_inner_product = list()
-    group_center_PSNR0 = list()
-    group_center_PSNR1 = list()
+    center0_p2p = list()
+    center0_std = list()
+    center1_p2p = list()
+    center1_std = list()
 
     print("Doing clustering...")
     print("Results are saved to {}".format(save_folder_name))
@@ -100,19 +103,22 @@ def run_stcl(stim, spike_counts, info, tap=8, cluster_dim=2, save_folder_name="c
         inner_product = np.dot(group_centers[0].ravel()-center.ravel(), group_centers[1].ravel()-center.ravel())
 
         # calc PSNRs for the two centers
-        PSNR0 = pysta.calc_PSNR(group_centers[0])
-        PSNR1 = pysta.calc_PSNR(group_centers[1])
+        p2p0, sig0 = pysta.calc_peak_to_peak_and_std(group_centers[0])
+        p2p1, sig1 = pysta.calc_peak_to_peak_and_std(group_centers[1])
 
         # save clustering results to lists
         channel_names.append(channel_name)
         num_spikes.append(np.sum(spike_count))
 
         sta = np.average(data_row, weights=spike_count, axis=0)  # to compare
-        PSNR = pysta.calc_PSNR(sta)
-        sta_PSNR.append(PSNR)
+        p2p, sig = pysta.calc_peak_to_peak_and_std(sta)
+        sta_p2p.append(p2p)
+        sta_std.append(sig)
 
-        group_center_PSNR0.append(PSNR0)
-        group_center_PSNR1.append(PSNR1)
+        center0_p2p.append(p2p0)
+        center0_std.append(sig0)
+        center1_p2p.append(p2p1)
+        center1_std.append(sig1)
         weight0.append(cl.weights_[0])
         weight1.append(cl.weights_[1])
         group_center_inner_product.append(inner_product)
@@ -120,7 +126,8 @@ def run_stcl(stim, spike_counts, info, tap=8, cluster_dim=2, save_folder_name="c
         # plot group_centers
         dt = 100
         grid_T = np.linspace(-tap + 1, 0, tap) * dt
-        stcl.plot_centers(sta, group_centers, grid_T, cl.weights_, PSNR, [PSNR0, PSNR1])
+        stcl.plot_centers(sta, group_centers, grid_T, cl.weights_, p2p, [p2p0, p2p1])
+        #stcl.plot_centers(sta, group_centers, grid_T, cl.weights_, p2p/sig, [p2p0/sig0, p2p1/sig1])
         plt.savefig(os.path.join(save_folder_name, "{}_centers.png".format(channel_name)))
         plt.savefig(os.path.join(save_folder_name, "{}_centers.pdf".format(channel_name)))
         plt.close()
@@ -141,12 +148,14 @@ def run_stcl(stim, spike_counts, info, tap=8, cluster_dim=2, save_folder_name="c
                   "num_spikes": num_spikes,
                   "cell_type": info["cell type"],
                   # STA
-                  "PSNR": sta_PSNR,
+                  "sta_p2p": sta_p2p,
+                  'sta_std': sta_std,
                   # STC
                   "eig1": largest_eigen_values, "eig2": second_largest_eigen_values, "eig3": third_largest_eigen_values,
                   # clustering
                   "converged": converged,
-                  "PSNR1": group_center_PSNR0, "PSNR2": group_center_PSNR1,
+                  "center0_p2p": center0_p2p, "center0_std": center0_std,
+                  "center1_p2p": center1_p2p, "center1_std": center1_std,
                   "weight1": weight0, "weight2": weight1,
                   "inner_product": group_center_inner_product}).to_csv(os.path.join(save_folder_name, "clusters.csv"), index=None)
 
@@ -229,9 +238,10 @@ if __name__ == '__main__':
 
     print('contrast is {}.'.format(args.contrast))
     print("number of tap is {}.".format(args.tap))
+    print("dimension for clustering is is {}.".format(args.dim))
 
     # load experimental info
-    print('loading experimental ino')
+    print('loading experimental info')
     data_path = 'data/gaussian_stim_data'
     info = pd.read_csv(os.path.join(data_path, 'contrast{}_sta.csv'.format(args.contrast)))
 
@@ -247,7 +257,7 @@ if __name__ == '__main__':
 
     spike_counts = data['spike_counts']
 
-    save_folder_name = "gaussian_stim_contrast{}_tap{}_cluster_dim{}".format(args.contrast, args.tap, args.dim)
+    save_folder_name = "results/gaussian_stim_contrast{}_tap{}_cluster_dim{}".format(args.contrast, args.tap, args.dim)
     if not os.path.exists(save_folder_name):
         os.makedirs(save_folder_name)
 

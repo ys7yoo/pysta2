@@ -158,7 +158,7 @@ def plot_examples(cluster_sorted, cluster_dim, temporal_profile=True, spatial_pr
                         folder_name=folder_name, file_name_prefix=file_name_prefix)
 
 
-def plot_centers(center, group_center, grid_T, weights=None, sta_PSNR=None, PSNRs=None, vmin=0, vmax=1):
+def plot_centers(center, group_center, grid_T, weights=None, sta_value=None, center_values=None, vmin=0, vmax=1):
     num_centers = len(group_center)
     plt.figure(figsize=(5.5*(num_centers+1),4))
 
@@ -177,8 +177,8 @@ def plot_centers(center, group_center, grid_T, weights=None, sta_PSNR=None, PSNR
     ax.spines['right'].set_visible(False)
 
     # PSNR = pysta.calc_PSNR(center)
-    if sta_PSNR is not None:
-        plt.title("PSNR={:.2f}".format(sta_PSNR))
+    if sta_value is not None:
+        plt.title("{:.2f}".format(sta_value))
     ax.set_ylim(vmin, vmax)
 
 
@@ -198,8 +198,8 @@ def plot_centers(center, group_center, grid_T, weights=None, sta_PSNR=None, PSNR
 
         # title_string = "group {}".format(i+1)
         title_string = ""
-        if PSNRs is not None:
-            title_string = title_string + "PSNR={:.1f}".format(PSNRs[i])
+        if center_values is not None:
+            title_string = title_string + "{:.1f}".format(center_values[i])
         if weights is not None:
             title_string = title_string + ", weight={:.2f}".format(weights[i])
 

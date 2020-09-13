@@ -565,6 +565,14 @@ def count_significant_pixels(sta, time_bin):
     return np.sum(pixel_high), np.sum(pixel_low)
 
 
+def calc_peak_to_peak_and_std(stim):
+    stim_max = np.max(stim.ravel())
+    stim_min = np.min(stim.ravel())
+    stim_std = np.std(stim.ravel())
+
+    return stim_max-stim_min, stim_std
+
+
 def calc_PSNR(stim):
     stim_max = np.max(stim.ravel())
     stim_min = np.min(stim.ravel())
