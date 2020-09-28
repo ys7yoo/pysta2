@@ -391,13 +391,16 @@ def calc_grid_T(tap, dt):
     return grid_T
 
 
-def plot_temporal_profile(sta, tap, dt):
+def plot_temporal_profile(sta, tap, dt, ylim=None):
     # calc time to spike
     grid_T = calc_grid_T(tap, dt)
 
     # not plot
     plt.plot(grid_T, sta.reshape([-1, tap]).T)
     plt.xlabel('time to spike (ms)')
+
+    if ylim is not None:
+        plt.ylim(ylim)
 
     # remove top & right box
     # https://stackoverflow.com/a/28720127
