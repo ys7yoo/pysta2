@@ -156,7 +156,7 @@ def run_stcl(stim, spike_counts, info, tap=8, cluster_dim=2, save_folder_name="c
                   "converged": converged,
                   "center0_p2p": center0_p2p, "center0_std": center0_std,
                   "center1_p2p": center1_p2p, "center1_std": center1_std,
-                  "weight1": weight0, "weight2": weight1,
+                  "weight0": weight0, "weight1": weight1,
                   "inner_product": group_center_inner_product}).to_csv(os.path.join(save_folder_name, "clusters.csv"), index=None)
 
 
