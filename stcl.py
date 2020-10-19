@@ -125,7 +125,6 @@ def run(stim, spike_counts, channel_names,
         p2p2, sig2 = pysta.calc_peak_to_peak_and_std(group_centers[1])
 
         # save clustering results to lists
-        channel_names.append(channel_name)
         num_spikes.append(np.sum(spike_count))
 
         sta = np.average(data_row, weights=spike_count, axis=0)  # to compare
