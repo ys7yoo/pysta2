@@ -26,6 +26,56 @@ def do_stc(data_centered, weights=None, cov_algorithm="classic", num_components=
     return eig_values, eig_vectors
 
 
+def plot_stc_results(data_centered, eig_values, eig_vectors, folder_name, channel_name):
+    # remove the last zero eigenvalue
+    if eig_values[-1] < 1e-10:
+        eig_values = eig_values[:-1]
+        eig_vectors = eig_vectors[:,:-1]
+
+    # plot eigenvalues
+    np.savetxt("{}/{}_eig_values.png".format(folder_name, channel_name), eig_values)
+    plt.figure(figsize=(7, 4))
+    plt.plot(eig_values, 'o:')
+    YLIM = plt.ylim()
+    # print(XLIM)
+    plt.ylim([0, YLIM[1]])
+    plt.ylabel('eigenvalues')
+    plt.savefig("{}/{}_eig_values.png".format(folder_name, channel_name))
+    plt.close()
+
+    # plot the 1st eigenvector of STC
+    pysta.plot_stim_slices(eig_vectors[:, 0], 8, 8, -0.1, 0.1, dt=1000/info["sampling_rate"])
+    plt.savefig("{}/{}_eig_vector_1st.png".format(folder_name, channel_name))
+    plt.close()
+
+    # plot the last non-zero eigenvector of STC
+    pysta.plot_stim_slices(eig_vectors[:, -1], 8, 8, -0.1, 0.1, dt=1000/info["sampling_rate"])
+    plt.savefig("{}/{}_eig_vector_last.png".format(folder_name, channel_name))
+    plt.close()
+
+
+    # project
+    projected = stc.project(data_centered, eig_vectors)  # [:,0:7]
+
+    plt.figure(figsize=(6.5, 5))
+    plt.scatter(projected[:, 0], projected[:, 1], s=10, linewidths=0, color='k', alpha=0.5)
+    plt.xlabel("$c_1$")
+    plt.ylabel("$c_2$")
+    plt.savefig("{}/{}_projected.png".format(folder_name, channel_name))
+    plt.close()
+
+    # plot histogram of projected coeff
+    num_figs = 4
+    plt.figure(figsize=(5*num_figs, 4))
+    for i in range(num_figs):
+        plt.subplot(1, num_figs, i+1)
+        plt.hist(projected[:,i], 50)
+        plt.xlabel("$c_{}$".format(i+1))
+        plt.ylabel("count")
+    plt.savefig("{}/{}_projected_hist.png".format(folder_name, channel_name))
+    plt.close()
+
+
 def flip_columns(vectors):
     column_sum = np.sum(vectors, axis=0)
     for i in range(len(column_sum)):
