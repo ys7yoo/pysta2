@@ -33,10 +33,14 @@ def calc_kurtosis(data_centered, eig_vectors):
 ###############################################################################
 # STC + Clustering
 ###############################################################################
-def run_stcl(stim, spike_counts, info, tap=8, cluster_dim=2, save_folder_name="clustering"):
+def run(stim, spike_counts, channel_names,
+        tap=8,
+        cov_algorithm="classic",
+        cluster_dim=2,
+        results_path="clustering"):
     # stim, spike_counts, tap = args.tap, cluster_dim = args.dim, save_folder_name = save_folder_name)
 
-    channel_names = list()
+    # channel_names = list()
     num_spikes = list()
     sta_p2p = list()
     sta_std = list()
@@ -55,10 +59,13 @@ def run_stcl(stim, spike_counts, info, tap=8, cluster_dim=2, save_folder_name="c
     center2_std = list()
 
     print("Doing clustering...")
-    print("Results are saved to {}".format(save_folder_name))
+    print("Results are saved to {}".format(results_path))
     num_channels = spike_counts.shape[0]
     for ch_idx in tqdm(range(num_channels)):
-        channel_name = info["channel"][ch_idx]
+        channel_name = channel_names[ch_idx]
+        #channel_name = info["channel_names"][ch_idx]
+        # channel_name = info["channel"][ch_idx]
+
         # cell_type = info["cell_types"][ch_idx]
         # print(channel_name, cell_type)
 
@@ -81,7 +88,8 @@ def run_stcl(stim, spike_counts, info, tap=8, cluster_dim=2, save_folder_name="c
         data_centered = data_row - center
 
         # do STC
-        eig_values, eig_vectors = stc.do_stc(data_centered, weights)
+        eig_values, eig_vectors = stc.do_stc(data_centered, weights, cov_algorithm)
+        # eig_values, eig_vectors = stc.do_stc(data_centered, weights)
 
         largest_eigen_values.append(eig_values[0])
         second_largest_eigen_values.append(eig_values[1])
@@ -138,25 +146,25 @@ def run_stcl(stim, spike_counts, info, tap=8, cluster_dim=2, save_folder_name="c
         grid_T = np.linspace(-tap + 1, 0, tap) * dt
         plot_centers(sta, group_centers, grid_T, cl.weights_, p2p, [p2p1, p2p2])
         #stcl.plot_centers(sta, group_centers, grid_T, cl.weights_, p2p/sig, [p2p1/sig1, p2p2/sig2])
-        plt.savefig(os.path.join(save_folder_name, "{}_centers.png".format(channel_name)))
-        plt.savefig(os.path.join(save_folder_name, "{}_centers.pdf".format(channel_name)))
+        plt.savefig(os.path.join(results_path, "{}_centers.png".format(channel_name)))
+        plt.savefig(os.path.join(results_path, "{}_centers.pdf".format(channel_name)))
         plt.close()
 
         pysta.plot_stim_slices(group_centers[0], dt=dt)
-        plt.savefig(os.path.join(save_folder_name, "{}_center_1.png".format(channel_name)))
+        plt.savefig(os.path.join(results_path, "{}_center_1.png".format(channel_name)))
         plt.close()
 
         pysta.plot_stim_slices(group_centers[1], dt=dt)
-        plt.savefig(os.path.join(save_folder_name, "{}_center_2.png".format(channel_name)))
+        plt.savefig(os.path.join(results_path, "{}_center_2.png".format(channel_name)))
         plt.close()
 
         # save STA and group centers
-        np.savez_compressed(os.path.join(save_folder_name, "{}.npz".format(channel_name)), sta=sta, group_centers=group_centers)
+        np.savez_compressed(os.path.join(results_path, "{}.npz".format(channel_name)), sta=sta, group_centers=group_centers)
 
     # save channel names and weights
     pd.DataFrame({"channel_name": channel_names,
                   "num_spikes": num_spikes,
-                  "cell_type": info["cell type"],
+                  # "cell_type": cell_types,
                   # STA
                   "sta_p2p": sta_p2p,
                   'sta_std': sta_std,
@@ -167,7 +175,7 @@ def run_stcl(stim, spike_counts, info, tap=8, cluster_dim=2, save_folder_name="c
                   "center1_p2p": center1_p2p, "center1_std": center1_std,
                   "center2_p2p": center2_p2p, "center2_std": center2_std,
                   "weight1": weight1, "weight2": weight2,
-                  "inner_product": group_center_inner_product}).to_csv(os.path.join(save_folder_name, "clusters.csv"), index=None)
+                  "inner_product": group_center_inner_product}).to_csv(os.path.join(results_path, "clusters.csv"), index=None)
 
 
 def fit(feature, initial_pred=None):
