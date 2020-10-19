@@ -50,8 +50,8 @@ def run(stim, spike_counts, channel_names,
     third_largest_eigen_values = list()
 
     converged = list()
-    weight1 = list()
-    weight2 = list()
+    center1_weight = list()
+    center2_weight = list()
     group_center_inner_product = list()
     center1_p2p = list()
     center1_std = list()
@@ -136,8 +136,8 @@ def run(stim, spike_counts, channel_names,
         center1_std.append(sig1)
         center2_p2p.append(p2p2)
         center2_std.append(sig2)
-        weight1.append(cl.weights_[0])
-        weight2.append(cl.weights_[1])
+        center1_weight.append(cl.weights_[0])
+        center2_weight.append(cl.weights_[1])
         group_center_inner_product.append(inner_product)
 
         # plot group_centers
@@ -173,7 +173,7 @@ def run(stim, spike_counts, channel_names,
                   "converged": converged,
                   "center1_p2p": center1_p2p, "center1_std": center1_std,
                   "center2_p2p": center2_p2p, "center2_std": center2_std,
-                  "weight1": weight1, "weight2": weight2,
+                  "center1_weight": center1_weight, "center2_weight": center2_weight,
                   "inner_product": group_center_inner_product}).to_csv(os.path.join(results_path, "clusters.csv"), index=None)
 
 
