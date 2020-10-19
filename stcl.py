@@ -170,10 +170,11 @@ def run(stim, spike_counts, channel_names,
                   # STC
                   "stc_eig1": largest_eigen_values, "stc_eig2": second_largest_eigen_values, "stc_eig3": third_largest_eigen_values,
                   # clustering
-                  "stcl_converged": converged,
+                  "converged": converged,
                   "center1_p2p": center1_p2p, "center1_std": center1_std,
+                  "center1_weight": center1_weight,
                   "center2_p2p": center2_p2p, "center2_std": center2_std,
-                  "center1_weight": center1_weight, "center2_weight": center2_weight,
+                  "center2_weight": center2_weight,
                   "centers_inner_product": group_center_inner_product}).to_csv(os.path.join(results_path, "clusters.csv"), index=None)
 
 
