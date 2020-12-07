@@ -396,3 +396,133 @@ def load_centers(cluster_folder_name, channel_names, shape=[8, 8, 8]):
     return sta, center0, center1
 
 
+def box_off():
+    ax = plt.gca()
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+
+def plot_projection_hist(projected, ticks=None, lims=None):
+    plt.figure(figsize=(8, 3.5))
+
+    plt.subplot(121)
+    bins = np.linspace(-4, 4, 100)
+
+    # projection to the 1st ev
+    # bins = np.linspace(-4,4.161)
+    plt.hist(projected[:, 0], bins=bins, color='k')
+    plt.xlim((-3, 3))
+    plt.yticks([0, 50, 100, 150])
+
+    plt.xlabel('$v_1$')
+    plt.ylabel('count')
+
+    box_off()
+
+    # scatter plot of the first two projections
+    # plt.figure(figsize=(5.5,5))
+    plt.subplot(122)
+    plt.scatter(projected[:, 0], projected[:, 1], alpha=0.1, c='k')
+
+    plt.axis('equal')
+    if ticks is not None:
+        plt.xticks(ticks)
+        plt.yticks(ticks)
+    #         plt.xticks([-4, -3, -2, -1, 0, 1, 2, 3, 4])
+    #         plt.yticks([-4, -3, -2, -1, 0, 1, 2, 3, 4])
+
+    if lims is not None:
+        plt.xlim(lims[0], lims[1])
+        plt.ylim(lims[0], lims[1])
+    #         plt.xlim(-3.5, 3.5)
+    #         plt.ylim(-3.5, 3.5)
+
+    plt.xlabel('$v_1$')
+    plt.ylabel('$v_2$')
+
+    box_off()
+
+
+def plot_projection(projected, weights, cl=None):
+    # plotting code from analyze_cluster.ipynb
+
+    # project centers
+    # sta = np.average(spike_triggered_stim, weights=spike_count, axis=0)
+    # sta_projected = stc.project(sta.ravel(), eig_vectors)
+    # group_center0_projected = stc.project(group_centers[0], eig_vectors)
+    # group_center1_projected = stc.project(group_centers[1], eig_vectors)
+
+    plt.figure(figsize=(5.5, 5))
+    # plt.figure(figsize=(8, 8))
+
+    # scatter plot of projeceted points
+    plt.scatter(projected[:, 0], projected[:, 1], alpha=0.1, c='k')
+
+    # STA
+    center = np.average(projected[:, :2], weights=weights, axis=0)
+    plt.plot(center[0], center[1], 'sb', markersize=8)
+
+    # calc cov mat for plotting ellipse
+    covariance_mat = stc.calc_covariance_matrix(projected[:, :2], weights=weights, centered=True)
+    pysta.plot_ellipse(center[:2], covariance_mat, 'b-')
+
+    # cluster centers
+    if cl is not None:
+        center0 = cl.means_[0]
+        plt.plot(center0[0], center0[1], '^r', markersize=8)
+        center1 = cl.means_[1]
+        plt.plot(center1[0], center1[1], '^r', markersize=8)
+
+        # plt.plot(group_center0_projected[0], group_center0_projected[1], '^r')
+        # plt.plot(group_center1_projected[0], group_center1_projected[1], '^r')
+
+        pysta.plot_ellipse(cl.means_[0], cl.covariances_[0], 'r-')
+        pysta.plot_ellipse(cl.means_[1], cl.covariances_[1], 'r-')
+
+        plt.legend(["STA", "STC", "STCL centers", None, "STCL covariances"])  # , loc="upper left")
+    else:
+        plt.legend(["STA", "STC"])
+
+    # remove top & right box
+    # https://stackoverflow.com/a/28720127
+    ax = plt.gca()
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+    plt.axis('equal')
+    plt.xticks([-4, -3, -2, -1, 0, 1, 2, 3, 4])
+    plt.yticks([-4, -3, -2, -1, 0, 1, 2, 3, 4])
+
+    plt.xlim(-3.5, 3.5)
+    plt.ylim(-3.5, 3.5)
+
+    # plt.savefig(os.path.join('figure', dataset + "_" + channel_name + "_projection_no_legend.pdf"))
+    # plt.savefig(os.path.join('figure', dataset + "_" + channel_name + "_projection_no_legend.png"))
+
+    plt.xlabel("projection to the 1st eigenvector")
+    plt.ylabel("projection to the 2nd eigenvector")
+
+    # plt.savefig(os.path.join('figure', dataset + "_" + channel_name + "_projection.pdf"))
+    # plt.savefig(os.path.join('figure', dataset + "_" + channel_name + "_projection.png"))
+
+    stds = np.std(projected[:, :2], axis=0)
+    plt.title('stds={:.2f}, {:.2f}'.format(stds[0], stds[1]))
+
+
+def plot_projection_with_label(projected, label):
+    idx = np.where(label > 0)
+    plt.scatter(projected[idx, 0], projected[idx, 1], alpha=0.1, c='r')
+    idx = np.where(label == 0)
+    plt.scatter(projected[idx, 0], projected[idx, 1], alpha=0.1, c='b')
+
+    plt.axis('equal')
+    plt.xticks([-4, -3, -2, -1, 0, 1, 2, 3, 4])
+    plt.yticks([-4, -3, -2, -1, 0, 1, 2, 3, 4])
+
+    plt.xlim(-3.5, 3.5)
+    plt.ylim(-3.5, 3.5)
+
+    stds = np.std(projected[:, :2], axis=0)
+    plt.title('stds={:.2f}, {:.2f}'.format(stds[0], stds[1]))
+
+    box_off()
