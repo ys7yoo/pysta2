@@ -77,7 +77,7 @@ def calc_axes(cov):
     return axes
 
 # plot function
-def plot_sta_slice_with_receptive_field(sta, time_bin=5, target_shape=None, type='both'):
+def plot_sta_slice_with_receptive_field(sta, time_bin=5, target_shape=None, type='both', vmax=None, vmin=None):
     if sta.ndim == 3:
         sta_slice = sta[:,:,time_bin]
         # target_shape = sta.shape[:2]
@@ -86,7 +86,7 @@ def plot_sta_slice_with_receptive_field(sta, time_bin=5, target_shape=None, type
         if target_shape is None:
             raise ValueError('Must provide target_shape')
 
-    plt.imshow(sta_slice, cmap='gray', origin='lower')
+    plt.imshow(sta_slice, cmap='gray', origin='lower', vmax=vmax, vmin=vmin)
 
     RF = fit_receptive_field(sta, time_bin, target_shape, type=type)
 
