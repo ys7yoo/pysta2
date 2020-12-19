@@ -5,11 +5,16 @@ import pandas as pd
 
 import os
 
-def grab_spike_triggered_stim(stim, spike, tap):
 
-    num_time_bin = stim.shape[1]
+def grab_spike_triggered_stim(stim, spike, tap):
+    assert(len(stim.shape) == 2)
+    if stim.shape[1] != spike.shape[0]:
+        stim = stim.T
     assert(stim.shape[1] == spike.shape[0])
-    
+
+    # now stim should be a (dim x T) matrix
+    num_time_bin = stim.shape[1]
+
     spike_trigered_stim = list()
     spike_count = list()
     for t in range(num_time_bin):
@@ -419,6 +424,7 @@ def plot_stim_slices(stim, width=8, height=8, vmin=0, vmax=1, dt=None):
     if T > 7:
         plt.figure(figsize=(8, 4))
         for t in range(T):
+            # axes.append(plt.subplot(4, T / 4, t + 1))
             axes.append(plt.subplot(2, T / 2, t + 1))
             plt.imshow(stim[:, :, t], cmap='gray', vmin=vmin, vmax=vmax, origin='lower')
             plt.axis('off')
