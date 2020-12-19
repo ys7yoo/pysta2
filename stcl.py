@@ -88,7 +88,7 @@ def run(stim, spike_counts, channel_names,
         data_centered = data_row - center
 
         # do STC
-        eig_values, eig_vectors = stc.do_stc(data_centered, weights, cov_algorithm)
+        eig_values, eig_vectors = stc.do_stc(data_centered, weights, cov_algorithm, num_components=3)
         # eig_values, eig_vectors = stc.do_stc(data_centered, weights)
 
         largest_eigen_values.append(eig_values[0])
@@ -143,17 +143,20 @@ def run(stim, spike_counts, channel_names,
         # plot group_centers
         dt = 100
         grid_T = np.linspace(-tap + 1, 0, tap) * dt
-        plot_centers(sta, group_centers, grid_T, cl.weights_, p2p, [p2p1, p2p2])
+        plot_centers(sta, group_centers, (-1,tap), grid_T, cl.weights_, p2p, [p2p1, p2p2])
         #stcl.plot_centers(sta, group_centers, grid_T, cl.weights_, p2p/sig, [p2p1/sig1, p2p2/sig2])
         plt.savefig(os.path.join(results_path, "{}_centers.png".format(channel_name)))
         plt.savefig(os.path.join(results_path, "{}_centers.pdf".format(channel_name)))
         plt.close()
 
-        pysta.plot_stim_slices(group_centers[0], dt=dt)
+        width = int(np.sqrt(sta.shape[0] / tap))
+        height = width
+
+        pysta.plot_stim_slices(group_centers[0], width=width, height=height, dt=dt)
         plt.savefig(os.path.join(results_path, "{}_center_1.png".format(channel_name)))
         plt.close()
 
-        pysta.plot_stim_slices(group_centers[1], dt=dt)
+        pysta.plot_stim_slices(group_centers[1], width=width, height=height, dt=dt)
         plt.savefig(os.path.join(results_path, "{}_center_2.png".format(channel_name)))
         plt.close()
 
@@ -325,7 +328,7 @@ def plot_examples(cluster_sorted, cluster_dim, temporal_profile=True, spatial_pr
                         folder_name=folder_name, file_name_prefix=file_name_prefix)
 
 
-def plot_centers(center, group_center, grid_T, weights=None, sta_value=None, center_values=None, vmin=0, vmax=1):
+def plot_centers(center, group_center, shape, grid_T, weights=None, sta_value=None, center_values=None, vmin=0, vmax=1):
     num_centers = len(group_center)
     plt.figure(figsize=(5.5*(num_centers+1),4))
 
@@ -333,7 +336,7 @@ def plot_centers(center, group_center, grid_T, weights=None, sta_value=None, cen
 
     # plot center
     ax = plt.subplot(1, num_centers+1, 1)
-    plt.plot(grid_T, center.reshape([8 * 8, -1]).T, 'k', alpha=0.3)
+    plt.plot(grid_T, center.reshape(shape).T, 'k', alpha=0.3)   # shape=[8 * 8, -1]
     plt.xlabel('time to spike (ms)')
     plt.ylabel('STA')
 
@@ -351,7 +354,7 @@ def plot_centers(center, group_center, grid_T, weights=None, sta_value=None, cen
 
     for i in range(num_centers):
         ax=plt.subplot(1, num_centers+1, i+2)
-        plt.plot(grid_T, group_center[i].reshape([8 * 8, -1]).T, colors[i], alpha=0.3)
+        plt.plot(grid_T, group_center[i].reshape(shape).T, colors[i], alpha=0.3)
         plt.xlabel('time to spike (ms)')
         plt.ylabel("cluster {} center".format(i+1))
 
