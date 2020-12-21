@@ -181,11 +181,33 @@ def run(stim, spike_counts, channel_names,
                   "centers_inner_product": group_center_inner_product}).to_csv(os.path.join(results_path, "clusters.csv"), index=None)
 
 
-def fit(feature, initial_pred=None):
+def repeat_row(data, weights):
+
+    is_input_dim_one = False
+    if len(data.shape) == 1:
+        is_input_dim_one = True
+        data = data.reshape(-1,1)
+
+    duplicated = []
+    for idx_row in range(data.shape[0]):
+        row = data[np.newaxis, idx_row, :]
+        duplicated.append(np.repeat(row, weights[idx_row], axis=0))
+
+    if is_input_dim_one:
+        return np.concatenate(duplicated, axis=0).ravel()
+    else:
+        return np.concatenate(duplicated, axis=0)
+
+
+def fit(feature, weights=None, initial_pred=None):
 
     # dim = feature.shape[1]
     if initial_pred is None:
         initial_pred = feature[:,0]
+
+    if weights is not None:
+        feature = repeat_row(feature, weights)
+        initial_pred = repeat_row(initial_pred, weights)
 
     means_init = [np.mean(feature[initial_pred<=0], axis=0),np.mean(feature[initial_pred>0], axis=0)]
     gm = GaussianMixture(n_components=2, n_init=20, means_init=means_init)
@@ -446,7 +468,7 @@ def plot_projection_hist(projected, ticks=None, lims=None):
     box_off()
 
 
-def plot_projection(projected, weights, cl=None):
+def plot_projection(projected, weights, cl=None, alpha=0.1, lims=(-3.5, 3.5)):
     # plotting code from analyze_cluster.ipynb
 
     # project centers
@@ -458,8 +480,8 @@ def plot_projection(projected, weights, cl=None):
     plt.figure(figsize=(5.5, 5))
     # plt.figure(figsize=(8, 8))
 
-    # scatter plot of projeceted points
-    plt.scatter(projected[:, 0], projected[:, 1], alpha=0.1, c='k')
+    # scatter plot of projected points
+    plt.scatter(projected[:, 0], projected[:, 1], alpha=alpha, c='k')
 
     # STA
     center = np.average(projected[:, :2], weights=weights, axis=0)
@@ -473,16 +495,17 @@ def plot_projection(projected, weights, cl=None):
     if cl is not None:
         center0 = cl.means_[0]
         plt.plot(center0[0], center0[1], '^r', markersize=8)
+        pysta.plot_ellipse(cl.means_[0], cl.covariances_[0], 'r-')
+
+
         center1 = cl.means_[1]
-        plt.plot(center1[0], center1[1], '^r', markersize=8)
+        plt.plot(center1[0], center1[1], '^g', markersize=8)
+        pysta.plot_ellipse(cl.means_[1], cl.covariances_[1], 'g-')
 
         # plt.plot(group_center0_projected[0], group_center0_projected[1], '^r')
         # plt.plot(group_center1_projected[0], group_center1_projected[1], '^r')
 
-        pysta.plot_ellipse(cl.means_[0], cl.covariances_[0], 'r-')
-        pysta.plot_ellipse(cl.means_[1], cl.covariances_[1], 'r-')
-
-        plt.legend(["STA", "STC", "STCL centers", None, "STCL covariances"])  # , loc="upper left")
+        plt.legend(["STA", "STC", "Cluster 1 mean", "Cluster 1 covariance", "Cluster 2 mean", "Cluster 2 covariance"])  # , loc="upper left")
     else:
         plt.legend(["STA", "STC"])
 
@@ -496,8 +519,10 @@ def plot_projection(projected, weights, cl=None):
     plt.xticks([-4, -3, -2, -1, 0, 1, 2, 3, 4])
     plt.yticks([-4, -3, -2, -1, 0, 1, 2, 3, 4])
 
-    plt.xlim(-3.5, 3.5)
-    plt.ylim(-3.5, 3.5)
+    # plt.xlim(-3.5, 3.5)
+    # plt.ylim(-3.5, 3.5)
+    plt.xlim(lims)
+    plt.ylim(lims)
 
     # plt.savefig(os.path.join('figure', dataset + "_" + channel_name + "_projection_no_legend.pdf"))
     # plt.savefig(os.path.join('figure', dataset + "_" + channel_name + "_projection_no_legend.png"))
@@ -508,24 +533,31 @@ def plot_projection(projected, weights, cl=None):
     # plt.savefig(os.path.join('figure', dataset + "_" + channel_name + "_projection.pdf"))
     # plt.savefig(os.path.join('figure', dataset + "_" + channel_name + "_projection.png"))
 
-    stds = np.std(projected[:, :2], axis=0)
-    plt.title('stds={:.2f}, {:.2f}'.format(stds[0], stds[1]))
+    # stds = np.std(projected[:, :2], axis=0)
+    # plt.title('stds={:.2f}, {:.2f}'.format(stds[0], stds[1]))
 
 
-def plot_projection_with_label(projected, label):
+def plot_projection_with_label(projected, label, alpha=0.1, lims=(-3.5, 3.5)):
     idx = np.where(label > 0)
-    plt.scatter(projected[idx, 0], projected[idx, 1], alpha=0.1, c='r')
+    # plt.plot(projected[idx, 0], projected[idx, 1], 'or', alpha=0.1, markersize=4)
+    plt.scatter(projected[idx, 0], projected[idx, 1], alpha=alpha, c='r')
     idx = np.where(label == 0)
-    plt.scatter(projected[idx, 0], projected[idx, 1], alpha=0.1, c='b')
+    # plt.plot(projected[idx, 0], projected[idx, 1], 'ob', alpha=0.1, markersize=4)
+    plt.scatter(projected[idx, 0], projected[idx, 1], alpha=alpha, c='b')
 
-    plt.axis('equal')
+
     plt.xticks([-4, -3, -2, -1, 0, 1, 2, 3, 4])
     plt.yticks([-4, -3, -2, -1, 0, 1, 2, 3, 4])
+    #
 
-    plt.xlim(-3.5, 3.5)
-    plt.ylim(-3.5, 3.5)
+    # plt.axis('equal')
+    # plt.xlim(-3.5, 3.5)
+    # plt.ylim(-3.5, 3.5)
+    plt.xlim(lims)
+    plt.ylim(lims)
+    # plt.axis('equal')
 
-    stds = np.std(projected[:, :2], axis=0)
-    plt.title('stds={:.2f}, {:.2f}'.format(stds[0], stds[1]))
+    # stds = np.std(projected[:, :2], axis=0)
+    # plt.title('stds={:.2f}, {:.2f}'.format(stds[0], stds[1]))
 
     box_off()
