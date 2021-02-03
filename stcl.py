@@ -199,18 +199,23 @@ def repeat_row(data, weights):
         return np.concatenate(duplicated, axis=0)
 
 
-def fit(feature, weights=None, initial_pred=None):
+def fit(feature, weights=None, n_components=2, initial_pred=None):
 
     # dim = feature.shape[1]
-    if initial_pred is None:
-        initial_pred = feature[:,0]
 
     if weights is not None:
         feature = repeat_row(feature, weights)
         initial_pred = repeat_row(initial_pred, weights)
 
-    means_init = [np.mean(feature[initial_pred<=0], axis=0),np.mean(feature[initial_pred>0], axis=0)]
-    gm = GaussianMixture(n_components=2, n_init=20, means_init=means_init)
+    if n_components == 2:  # automatic init by signs of the 1st dim
+        if initial_pred is None:
+            initial_pred = feature[:,0]
+
+        means_init = [np.mean(feature[initial_pred<=0], axis=0),np.mean(feature[initial_pred>0], axis=0)]
+        gm = GaussianMixture(n_components=n_components, n_init=20, means_init=means_init)
+    else:
+        gm = GaussianMixture(n_components=n_components, n_init=20)
+
     gm.fit(feature)
 
     # print("converged=", gm.converged_)
@@ -240,6 +245,10 @@ def calc_centers(spike_triggered_stim_row, spike_count, pred):
         # centers.append(np.nan)
 
     return centers
+
+
+def calc_inner_product(centers):
+    return np.dot(centers[0].ravel(), centers[1].ravel())
 
 
 def plot_temporal_profiles(sta, group_centers, tap, dt, vmin=0, vmax=1, titles=None):
