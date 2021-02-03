@@ -30,6 +30,27 @@ def calc_kurtosis(data_centered, eig_vectors):
     return kurtosis(projected)
 
 
+def calc_bhattacharyya_dist(means, covariances):
+    """
+    Bhattacharyya distance between two Gaussian distributions
+    See Fukunaga 1990
+    """
+    diff = np.array(means[1]) - np.array(means[0])
+    cov = (covariances[0] + covariances[1]) / 2;
+
+    term1 = np.dot(np.dot(diff, np.linalg.inv(cov)), diff.T) / 8
+    #     print(term1)
+
+    (sign0, logdet0) = np.linalg.slogdet(covariances[0])
+    (sign1, logdet1) = np.linalg.slogdet(covariances[1])
+    (sign, logdet) = np.linalg.slogdet(cov)
+    # print(logdet0, logdet1, logdet)
+
+    term2 = 0.5 * logdet - 0.25 * (logdet0 + logdet1)
+
+    return term1 + term2
+
+
 ###############################################################################
 # STC + Clustering
 ###############################################################################
@@ -224,6 +245,44 @@ def fit(feature, weights=None, n_components=2, initial_pred=None):
     # print("weights=", gm.weights_)
 
     return gm
+
+
+def vary_num_clusters(data, max_num_clusters=4, plot=True):
+
+    score_samples = list()
+    score = list()
+    AIC = list()
+    BIC = list()
+    for i in range(1, max_num_clusters + 1):
+        cl = fit(data, n_components=i)
+
+        score_samples.append(cl.score_samples(data))
+        score.append(cl.score(data))
+        AIC.append(cl.aic(data))
+        BIC.append(cl.bic(data))
+
+    if plot:
+        plt.figure(figsize=(6, 7))
+
+        plt.subplot(211)
+        plt.plot(range(1, max_num_clusters + 1), score, 'o-', label='mean score_samples')
+        plt.ylabel('mean score')
+        box_off()
+
+        # ch, unit = channel_name.split('_')
+        # plt.title('ch{} unit{}'.format(ch, unit))
+
+        plt.subplot(212)
+        plt.plot(range(1, max_num_clusters + 1), AIC, 'o-', label='AIC')
+        plt.plot(range(1, max_num_clusters + 1), BIC, 'o-', label='BIC')
+        plt.ylabel('mean score')
+        plt.xlabel('number of clusters')
+        plt.legend()
+        box_off()
+        #
+        # plt.savefig(os.path.join('figure', channel_name + '_score.pdf'))
+
+    return {'score_samples': score_samples, 'score': score, 'AIC': AIC, 'BIC': BIC}
 
 
 def calc_centers(spike_triggered_stim_row, spike_count, pred):
