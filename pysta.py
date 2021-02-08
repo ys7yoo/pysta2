@@ -8,12 +8,12 @@ import os
 
 def grab_spike_triggered_stim(stim, spike, tap):
     assert(len(stim.shape) == 2)
-    if stim.shape[1] != spike.shape[0]:
+    if stim.shape[0] != spike.shape[0]:
         stim = stim.T
-    assert(stim.shape[1] == spike.shape[0])
+    assert(stim.shape[0] == spike.shape[0])
 
-    # now stim should be a (dim x T) matrix
-    num_time_bin = stim.shape[1]
+    # now stim should be a (T x dim) matrix
+    num_time_bin = stim.shape[0]
 
     spike_trigered_stim = list()
     spike_count = list()
@@ -26,11 +26,10 @@ def grab_spike_triggered_stim(stim, spike, tap):
 
         if sp > 0:
             #print(t, sp)
-            
-            spike_trigered_stim.append(np.array(stim[:,t-tap+1:t+1]))
-            spike_count.append(sp)
-            
+            spike_trigered_stim.append(np.array(stim[t-tap+1:t+1,:]))
+
             # spike
+            spike_count.append(sp)
     
     return np.array(spike_trigered_stim), np.array(spike_count).astype(int)
 
@@ -46,6 +45,52 @@ def grab_spike_triggered_stim_all_channels(stim, spike_train,tap):
     
     return spike_triggered_stim_all_ch, spike_count_all_ch
 
+
+def calc_sta(stim, spike_counts, tap):
+    spike_triggered_stim, weights = grab_spike_triggered_stim(stim, spike_counts, tap=tap)
+    # print(spike_triggered_stim.shape)
+
+    sta = np.average(spike_triggered_stim, weights=weights, axis=0)
+    # print(sta.shape)
+    
+    return sta
+
+def normalize_sta(stim, sta):
+    tap = sta.shape[0] # sta is tap x dim
+
+    # calc covariance of stacked stim
+    stacked_stim = stack(stim, tap)
+    # print(stacked_stim.shape)
+
+    stacked_stim_cov = calc_cov(stacked_stim)
+    # plt.imshow(stacked_stim_cov)
+
+    sta_reg = np.linalg.solve(stacked_stim_cov + 1e-9 * np.eye(sta.shape[0] * sta.shape[1]), sta.ravel())
+    # sta_reg = np.dot(np.linalg.inv(stacked_stim_cov + 1e-9*np.eye(sta.shape[0] * sta.shape[1])), sta.ravel())
+    sta_reg = sta_reg.reshape(tap, -1)
+
+    return sta_reg
+
+
+def stack(stim, tap):
+    assert (len(stim.shape) == 2)
+    # now stim should be a (T x dim) matrix
+    num_samples = stim.shape[0]
+
+    stacked_stim = list()
+    for t in range(num_samples):
+        if t < tap:
+            continue
+        stacked_stim.append(np.array(stim[t - tap + 1:t + 1, :]))
+
+    return np.array(stacked_stim)
+
+
+def calc_cov(stim):
+    num_samples = stim.shape[0]
+    stim = stim.reshape(num_samples, -1)
+    stim_cov = np.dot(stim.T, stim) / num_samples
+    return stim_cov
 
 ## some helper functions
 
@@ -400,9 +445,13 @@ def plot_temporal_profile(sta, tap, dt, ylim=None):
     # calc time to spike
     grid_T = calc_grid_T(tap, dt)
 
-    # not plot
-    plt.plot(grid_T, sta.reshape([-1, tap]).T)
-    plt.xlabel('time to spike (ms)')
+    # now plot
+    if sta.shape[0] == tap:   # sta is tap x dim
+        plt.plot(grid_T, sta)
+    elif sta.shape[1] == tap: # sta is dim x tap
+        plt.plot(grid_T, sta.T)
+        # plt.plot(grid_T, sta.reshape([-1, tap]).T)
+    plt.xlabel('time to spike (s)')
 
     if ylim is not None:
         plt.ylim(ylim)
@@ -415,9 +464,9 @@ def plot_temporal_profile(sta, tap, dt, ylim=None):
 
 
 def plot_stim_slices(stim, width=8, height=8, vmin=0, vmax=1, dt=None):
-    stim = stim.reshape([height, width, -1])
+    stim = stim.reshape([-1, height, width])
 
-    T = stim.shape[2]
+    T = stim.shape[0]
 
     axes = list()
 
@@ -425,8 +474,8 @@ def plot_stim_slices(stim, width=8, height=8, vmin=0, vmax=1, dt=None):
         plt.figure(figsize=(8, 4))
         for t in range(T):
             # axes.append(plt.subplot(4, T / 4, t + 1))
-            axes.append(plt.subplot(2, T / 2, t + 1))
-            plt.imshow(stim[:, :, t], cmap='gray', vmin=vmin, vmax=vmax, origin='lower')
+            axes.append(plt.subplot(2, int(T / 2), t + 1))
+            plt.imshow(stim[t, :, :], cmap='gray', vmin=vmin, vmax=vmax, origin='lower')
             plt.axis('off')
 
             if dt is not None:
@@ -435,7 +484,7 @@ def plot_stim_slices(stim, width=8, height=8, vmin=0, vmax=1, dt=None):
         plt.figure(figsize=(8, 3))
         for t in range(T):
             axes.append(plt.subplot(1, T, t + 1))
-            plt.imshow(stim[:, :, t], cmap='gray', vmin=vmin, vmax=vmax, origin='lower')
+            plt.imshow(stim[t, :, :], cmap='gray', vmin=vmin, vmax=vmax, origin='lower')
             plt.axis('off')
 
             if dt is not None:
