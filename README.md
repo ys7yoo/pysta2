@@ -2,7 +2,7 @@
 python code for spike-triggered analsysis including
 * Spike-triggered average (STA)
 * Spike-triggered covariance (STC)
-* Spike-triggered clustering (STCL)
+* Spike-triggered clustering (STCL) [paper](https://pubmed.ncbi.nlm.nih.gov/33321473/)
 
 
 # required packages
